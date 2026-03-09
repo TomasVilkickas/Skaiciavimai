@@ -130,4 +130,23 @@ def irasyti_antrastes(kaminas_obj: Kaminas):
             cell_f.number_format = '0.0000'
             cell_f.alignment = centered_alignment
 
+    # 6. Dinamiškas stulpelių A, B ir C langelių suliejimas pagal matavimo taškų kiekį
+    tasku_skaicius = kaminas_obj.tasku_skaicius
+    
+    if tasku_skaicius > 1:
+        pirma_eil = 5
+        paskutine_eil = 5 + tasku_skaicius - 1
+
+        for col in range(1, 4):  # A=1, B=2, C=3
+            ws.merge_cells(
+                start_row=pirma_eil,
+                start_column=col,
+                end_row=paskutine_eil,
+                end_column=col
+            )
+
+            cell = ws.cell(row=pirma_eil, column=col)
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+            print(tasku_skaicius)
+    
     wb.save(failas)

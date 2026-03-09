@@ -69,10 +69,10 @@ def vykdyti_atstumai(kaminas: Kaminas):
             kaminas.tasku_skaicius = taskai_vienai_linijai
 
         # --- 3. DUOMENŲ VALYMAS ---
-        for v in atstumai_raw:
-            if len(atstumai) >= kaminas.tasku_skaicius:
-                break
-            
+        # Paimame tik tiek reikšmių, kiek nurodyta stulpelyje 'Matavimo taškų skaičius'
+        atstumai_tikri = atstumai_raw[:taskai_vienai_linijai]
+
+        for v in atstumai_tikri:
             try:
                 v_str = str(v).replace(',', '.').strip()
                 val = float(v_str)
@@ -80,6 +80,9 @@ def vykdyti_atstumai(kaminas: Kaminas):
                     atstumai.append(val)
             except (ValueError, TypeError):
                 continue
+        
+        # Atnaujiname galutinį skaičių pagal tai, kiek realiai radome skaičių
+        kaminas.tasku_skaicius = len(atstumai)
 
         # --- 4. ĮRAŠYMAS IR CENTRAVIMAS ---
         wb = openpyxl.load_workbook("Rezultatai.xlsx")
