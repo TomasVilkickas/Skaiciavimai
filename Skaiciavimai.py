@@ -1,8 +1,9 @@
 import pandas as pd
 import os
+import time
 from MatavimoVieta import Kaminas
 from AtstumaiFunkcija import vykdyti_atstumai
-from Atmintis import patikrinti_atminti
+from PavadinimaiFunkcija import irasyti_antrastes
 
 def sukurti_rezultatu_faila():
     failo_pavadinimas = "Rezultatai.xlsx"
@@ -10,6 +11,8 @@ def sukurti_rezultatu_faila():
     if os.path.exists(failo_pavadinimas):
         print(f"1. Failas {failo_pavadinimas} jau egzistuoja.")
         return
+
+    time.sleep(2)
 
     lapai = ["Greitis", "H2O", "Paėmimas", "Aerodinamika", "Koncentracija", "Svėrimas", "Koncentracijos ribinės vertės"]
     with pd.ExcelWriter(failo_pavadinimas, engine='openpyxl') as writer:
@@ -35,7 +38,7 @@ def pagrindine_programa():
     vykdyti_apklausa()
     # SVARBU: vykdyti_atstumai turi wb.save("Rezultatai.xlsx") viduje
     vykdyti_atstumai(Kaminas) 
-    patikrinti_atminti()
+    irasyti_antrastes()
     print("\n=== PROGRAMOS PABAIGA (Patikrinkite Rezultatai.xlsx) ===")
 
 if __name__ == "__main__":

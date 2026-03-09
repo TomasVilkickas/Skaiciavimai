@@ -3,10 +3,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Duomenų failai (jei nenorite viešinti savo skaičiavimų rezultatų)
-Rezultatai.xlsx
-Atstumai.xlsx
-
 # Aplinkos nustatymai
 .venv/
 venv/
