@@ -147,6 +147,60 @@ def irasyti_antrastes(kaminas_obj: Kaminas):
 
             cell = ws.cell(row=pirma_eil, column=col)
             cell.alignment = Alignment(horizontal="center", vertical="center")
-            print(tasku_skaicius)
+   
+# --- NAUJA DALIS: Pito vamzdelio ir keitiklio pasirinkimas ---
     
+    # 1. Duomenų struktūra (Keitiklis -> Vamzdelio Nr -> (Koeficientas K, Neapibrėžtis A))
+    konfiguracija = {
+        "1": { # Testo 440DP
+            "7": (0.823, 0.039),
+            "8": (0.827, 0.038),
+            "404": (0.674, 0.036),
+            "566": (0.829, 0.037)
+        },
+        "2": { # Testo 445
+            "7": (0.825, 0.040),
+            "8": (0.827, 0.079),
+            "404": (0.678, 0.036),
+            "566": (0.836, 0.083)
+        }
+    }
+
+    print("\n--- PASIRINKITE ĮRANGĄ ---")
+    keitiklis = input("Kokį slėgio keitiklį naudojote?\n1 - Testo 440DP\n2 - Testo 445 (keitiklis Nr. 0638.1445.908)\nPasirinkimas: ")
+    
+    if keitiklis in konfiguracija:
+        vamzdelis = input("Koks Pito vamzdelio Nr., kurį naudojote matavimams (7, 8, 404 arba 566): ")
+        
+        if vamzdelis in konfiguracija[keitiklis]:
+            koef_k, neapibreztis_a = konfiguracija[keitiklis][vamzdelis]
+            
+            # Surandame stulpelių indeksus
+            idx_k = None
+            idx_a = None
+            for idx, pavadinimas in enumerate(stulpeliai, start=1):
+                if "Pito vamzdelio koeficientas, K" in pavadinimas:
+                    idx_k = idx
+                if "Išplėstinės neapibrėžties koef. A" in pavadinimas:
+                    idx_a = idx
+
+            # Įrašome koeficientą K tiek kartų, kiek yra matavimo taškų
+            if idx_k:
+                for r in range(5, 5 + kaminas_obj.tasku_skaicius):
+                    cell = ws.cell(row=r, column=idx_k, value=koef_k)
+                    cell.number_format = '0.000'
+                    cell.alignment = Alignment(horizontal="center", vertical="center")
+
+            # Įrašome neapibrėžtį A į du langelius po fraze
+            if idx_a:
+                for r in [5, 6]:
+                    cell = ws.cell(row=r, column=idx_a, value=neapibreztis_a)
+                    cell.number_format = '0.000'
+                    cell.alignment = Alignment(horizontal="center", vertical="center")
+        else:
+            print("Klaida: Neteisingas vamzdelio numeris.")
+    else:
+        print("Klaida: Neteisingas keitiklio pasirinkimas.")
+
+
     wb.save(failas)
