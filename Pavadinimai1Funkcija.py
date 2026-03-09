@@ -1,4 +1,5 @@
 import pandas as pd
+from openpyxl.utils import get_column_letter
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, Font, Border, Side
 from MatavimoVieta import Kaminas
@@ -73,16 +74,60 @@ def irasyti_antrastes(kaminas_obj: Kaminas):
     ws.row_dimensions[4].height = 130 
 
     # 4. Matmenų įrašymas po stulpeliu "Ortakio diametras, matmenys, m"
+    
     for idx, pavadinimas in enumerate(stulpeliai, start=1):
         if "Ortakio diametras, matmenys, m" in pavadinimas:
+            # Sukuriame stilių reikšmėms: centravimas ir rėmeliai
+            centered_alignment = Alignment(horizontal="center", vertical="center")
+            
             if kaminas_obj.forma == 'A':
+                # Apvalus: reikšmė į pirmą langelį po fraze (5 eilutė)
                 reiksme = f"{(kaminas_obj.skersmuo / 100):.2f}".replace('.', ',')
-                ws.cell(row=5, column=idx, value=reiksme).border = thin_border
+                cell = ws.cell(row=5, column=idx, value=reiksme)
+                cell.alignment = centered_alignment
             else:
+                # Stačiakampis: gylis į antrą (6 eilutė), plotis į trečią (7 eilutė)
                 g_m = f"{(kaminas_obj.gylis / 100):.2f}".replace('.', ',')
                 p_m = f"{(kaminas_obj.plotis / 100):.2f}".replace('.', ',')
-                ws.cell(row=5, column=idx, value=g_m).border = thin_border
-                ws.cell(row=6, column=idx, value=p_m).border = thin_border
+                
+                # Gylis
+                cell_g = ws.cell(row=6, column=idx, value=g_m)
+                cell_g.alignment = centered_alignment
+                
+                # Plotis
+                cell_p = ws.cell(row=7, column=idx, value=p_m)
+                cell_p.alignment = centered_alignment
+    
+   # 5. Skerspjūvio ploto F skaičiavimas naudojant Excel formules
+    centered_alignment = Alignment(horizontal="center", vertical="center")
+    
+    idx_matmenys = None
+    idx_plotas = None
+    
+    for idx, pavadinimas in enumerate(stulpeliai, start=1):
+        if "Ortakio diametras, matmenys, m" in pavadinimas:
+            idx_matmenys = idx
+        if "Ortakio skerspjūvio plotas F, m2" in pavadinimas:
+            idx_plotas = idx
+
+    if idx_matmenys and idx_plotas:
+        from openpyxl.utils import get_column_letter
+        col_m = get_column_letter(idx_matmenys) # Matmenų stulpelio raidė
+        
+        if kaminas_obj.forma == 'A':
+            # Apvalus: (D^2 * 3.14) / 4. D yra 5-oje eilutėje.
+            # Excel formulė: =(Raidė5^2*3.14)/4
+            formule_a = f"=({col_m}5^2*3.14)/4"
+            cell_f = ws.cell(row=5, column=idx_plotas, value=formule_a)
+            cell_f.number_format = '0.0000' # Užtikrina 4 skaičius po kablelio
+            cell_f.alignment = centered_alignment
+            
+        else:
+            # Stačiakampis: Gylis (6 eilutė) * Plotis (7 eilutė)
+            # Excel formulė: =Raidė6*Raidė7
+            formule_s = f"={col_m}6*{col_m}7"
+            cell_f = ws.cell(row=6, column=idx_plotas, value=formule_s)
+            cell_f.number_format = '0.0000'
+            cell_f.alignment = centered_alignment
 
     wb.save(failas)
-    print("SĖKMINGA: Lentelė suformuota su pilnais pavadinimais, be suliejimų.")
