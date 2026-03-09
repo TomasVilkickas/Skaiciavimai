@@ -3,7 +3,7 @@ import os
 import time
 from MatavimoVieta import Kaminas
 from AtstumaiFunkcija import vykdyti_atstumai
-from PavadinimaiFunkcija import irasyti_antrastes
+from Pavadinimai1Funkcija import irasyti_antrastes
 
 def sukurti_rezultatu_faila():
     failo_pavadinimas = "Rezultatai.xlsx"
@@ -38,7 +38,7 @@ def pagrindine_programa():
     vykdyti_apklausa()
     # SVARBU: vykdyti_atstumai turi wb.save("Rezultatai.xlsx") viduje
     vykdyti_atstumai(Kaminas) 
-    irasyti_antrastes()
+    irasyti_antrastes(Kaminas)
     print("\n=== PROGRAMOS PABAIGA (Patikrinkite Rezultatai.xlsx) ===")
 
 if __name__ == "__main__":
