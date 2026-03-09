@@ -1,0 +1,42 @@
+import pandas as pd
+import os
+from MatavimoVieta import Kaminas
+from AtstumaiFunkcija import vykdyti_atstumai
+from Atmintis import patikrinti_atminti
+
+def sukurti_rezultatu_faila():
+    failo_pavadinimas = "Rezultatai.xlsx"
+    # Jei failas jau yra, mes jo nebeperrašome, kad neištrintume duomenų
+    if os.path.exists(failo_pavadinimas):
+        print(f"1. Failas {failo_pavadinimas} jau egzistuoja.")
+        return
+
+    lapai = ["Greitis", "H2O", "Paėmimas", "Aerodinamika", "Koncentracija", "Svėrimas", "Koncentracijos ribinės vertės"]
+    with pd.ExcelWriter(failo_pavadinimas, engine='openpyxl') as writer:
+        for lapas in lapai:
+            pd.DataFrame().to_excel(writer, sheet_name=lapas, index=False)
+    print(f"1. Sukurtas naujas failas: {failo_pavadinimas}")
+
+def vykdyti_apklausa():
+    print("\n2. --- Matavimo vietos parametrų įvedimas ---")
+    Kaminas.forma = input("Kokia matavimo vietos skerspjūvio forma (Apvalus/Stačiakampis A/S): ").upper()
+    if Kaminas.forma == 'A':
+        Kaminas.skersmuo = int(input("Koks ortakio skersmuo, cm: "))
+        Kaminas.gylis = Kaminas.skersmuo
+        Kaminas.liniju_skaicius = int(input("Kiek matavimo linijų (1 arba 2): "))
+    else:
+        Kaminas.gylis = int(input("Koks ortakio gylis, cm: "))
+        Kaminas.plotis = int(input("Koks ortakio plotis, cm: "))
+        Kaminas.liniju_skaicius = int(input("Kiek matavimo linijų (1-5): "))
+    Kaminas.filtru_skaicius = int(input("Kiek filtrų (1, 2, 3): "))
+
+def pagrindine_programa():
+    sukurti_rezultatu_faila()
+    vykdyti_apklausa()
+    # SVARBU: vykdyti_atstumai turi wb.save("Rezultatai.xlsx") viduje
+    vykdyti_atstumai(Kaminas) 
+    patikrinti_atminti()
+    print("\n=== PROGRAMOS PABAIGA (Patikrinkite Rezultatai.xlsx) ===")
+
+if __name__ == "__main__":
+    pagrindine_programa()

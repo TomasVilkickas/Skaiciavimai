@@ -1,0 +1,17 @@
+# Python laikini failai
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Duomenų failai (jei nenorite viešinti savo skaičiavimų rezultatų)
+Rezultatai.xlsx
+Atstumai.xlsx
+
+# Aplinkos nustatymai
+.venv/
+venv/
+.env
+
+# VS Code ar kiti įrankiai
+.vscode/
+.idea/
