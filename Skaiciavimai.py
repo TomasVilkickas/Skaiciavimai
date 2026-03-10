@@ -5,6 +5,7 @@ from MatavimoVieta import Kaminas
 from AtstumaiFunkcija import vykdyti_atstumai
 from Pavadinimai1Funkcija import irasyti_antrastes
 from Pavadinimai2Funkcija import irasyti_antrastes2
+from SverimasSPFunkcija import spalvinti_sverimas
 
 def sukurti_rezultatu_faila():
     failo_pavadinimas = "Rezultatai.xlsx"
@@ -41,6 +42,7 @@ def pagrindine_programa():
     vykdyti_atstumai(Kaminas) 
     irasyti_antrastes(Kaminas)
     irasyti_antrastes2(Kaminas)
+    spalvinti_sverimas(Kaminas)
     print("\n=== PROGRAMOS PABAIGA (Patikrinkite Rezultatai.xlsx) ===")
 
 if __name__ == "__main__":
