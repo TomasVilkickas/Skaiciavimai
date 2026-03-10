@@ -66,11 +66,58 @@ def irasyti_antrastes2(kaminas_obj):
     # Įrašome antraštes (5 eilutė)
     formatuoti_eilute(ws_paemimas, 5, paemimas_headers, plotis=14)
     
+    # Įrašome lapo pavadinimą (2 eilutė, nuo A iki V stulpelio)
+    ws_paemimas.merge_cells(start_row=2, start_column=1, end_row=2, end_column=22) # V stulpelis yra 22-as
+    title_p = ws_paemimas.cell(row=2, column=1)
+    title_p.value = "Skaičiuoklė kietųjų dalelių koncentracijai nustatyti. Pradinių duomenų nustatymas"
+    title_p.font = title_font
+    title_p.alignment = center_wrap
+
     # Įrašome konkrečią reikšmę į 6 eilutę, 4 stulpelį (po ortakio pavadinimu)
     val_cell = ws_paemimas.cell(row=6, column=4)
     val_cell.value = ortakio_reiksme
     val_cell.alignment = center_wrap
     val_cell.border = Border()
+
+    # --- Duomenų paieška lape "Greitis" dėl plotų reikšmių perkėlimo
+       
+  # Surandame koordinates lape "Greitis"
+    target_row = None
+    target_col = None
+    
+    try:
+        # Naudojame paprastą load_workbook, kad rastume tekstą
+        temp_wb = load_workbook(file)
+        if "Greitis" in temp_wb.sheetnames:
+            temp_ws = temp_wb["Greitis"]
+            for row in temp_ws.iter_rows():
+                for cell in row:
+                    if cell.value and "Ortakio skerspjūvio plotas F, m2" in str(cell.value):
+                        target_row = cell.row
+                        target_col = cell.column
+                        break
+                if target_row: break
+        temp_wb.close()
+    except Exception as e:
+        print(f"Klaida ieškant koordinačių: {e}")
+
+    # Įrašome formulę į lapą "Paėmimas" E6 (stulpelis 5)
+    area_cell = ws_paemimas.cell(row=6, column=5)
+    
+    if target_row and target_col:
+        # Nustatome poslinkį: jei 'A', tai 1 eilutė žemiau, jei 'S' - 2 eilutės žemiau
+        row_offset = 1 if kaminas_obj.forma == "A" else 2
+        source_cell_address = f"{get_column_letter(target_col)}{target_row + row_offset}"
+        
+        # Sukuriame Excel formulę, pvz., ='Greitis'!E15
+        area_cell.value = f"='Greitis'!{source_cell_address}"
+    else:
+        area_cell.value = "Nerasta 'Greitis' lape"
+
+    # Stiliavimas (4 skaičiai po kablelio, centravimas, be rėmelių)
+    area_cell.number_format = '0.0000'
+    area_cell.alignment = center_wrap
+    area_cell.border = Border() # Nuimame rėmelius, jei jie buvo
 
     # --- 3. Lapas "Aerodinamika" ---
     ws_aero = wb.create_sheet("Aerodinamika") if "Aerodinamika" not in wb.sheetnames else wb["Aerodinamika"]
@@ -163,6 +210,7 @@ def irasyti_antrastes2(kaminas_obj):
     rib_headers = ["Planuojama surinkti dulkių masė m, g (<2,20 g)", "Mažiausia ėminio ėmimo trukmė t, 30 min", "Tikėtina dulkių koncentracija cexs, mg/Nm3;", "Planuojamas dujų tūrio siurbimo greitis matavimo metu ortakio sąlygomis Vo, l/min."]
     formatuoti_eilute(ws_rib, 5, rib_headers, plotis=18)
     ws_rib.merge_cells(start_row=3, start_column=1, end_row=3, end_column=4)
+    ws_rib.row_dimensions[3].height = 45
     title_r = ws_rib.cell(row=3, column=1)
     title_r.value = "Patikrinimas, ar planuojamas surinkti dulkių kiekis suderinamas su tuščiojo ėminio verte ir ar filtras nebus per daug apkrautas"
     title_r.font = title_font

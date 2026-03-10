@@ -56,8 +56,14 @@ def irasyti_antrastes(kaminas_obj: Kaminas):
     thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), 
                          top=Side(style='thin'), bottom=Side(style='thin'))
 
-    # 2. Antraštė 2-oje eilutėje (tik tekstas pirmame langelyje, be suliejimo)
-    ws.cell(row=2, column=1, value="Debitas pagal matuotą diferencinį slėgį").font = Font(bold=True)
+    # 2. Antraštė 2-oje eilutėje su dinaminiu suliejimu
+    paskutinis_stulpelis = len(stulpeliai)
+    ws.cell(row=2, column=1, value="Debitas pagal matuotą diferencinį slėgį")
+    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=paskutinis_stulpelis)
+    
+    pavadinimo_cell = ws.cell(row=2, column=1)
+    pavadinimo_cell.font = Font(bold=True, size=12) # Galite padidinti šriftą, jei reikia
+    pavadinimo_cell.alignment = Alignment(horizontal="center", vertical="center")
 
     # 3. Stulpelių formavimas (4 eilutė)
     for idx, pavadinimas in enumerate(stulpeliai, start=1):
