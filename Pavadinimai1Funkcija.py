@@ -56,18 +56,18 @@ def irasyti_antrastes(kaminas_obj: Kaminas):
     thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), 
                          top=Side(style='thin'), bottom=Side(style='thin'))
 
-    # 2. Antraštė 2-oje eilutėje su dinaminiu suliejimu
+    # 2. Antraštė 3-oje eilutėje su dinaminiu suliejimu
     paskutinis_stulpelis = len(stulpeliai)
-    ws.cell(row=2, column=1, value="Debitas pagal matuotą diferencinį slėgį")
-    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=paskutinis_stulpelis)
+    ws.cell(row=3, column=1, value="Debitas pagal matuotą diferencinį slėgį")
+    ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=paskutinis_stulpelis)
     
-    pavadinimo_cell = ws.cell(row=2, column=1)
+    pavadinimo_cell = ws.cell(row=3, column=1)
     pavadinimo_cell.font = Font(bold=True, size=12) # Galite padidinti šriftą, jei reikia
     pavadinimo_cell.alignment = Alignment(horizontal="center", vertical="center")
 
-    # 3. Stulpelių formavimas (4 eilutė)
+    # 3. Stulpelių formavimas (5 eilutė)
     for idx, pavadinimas in enumerate(stulpeliai, start=1):
-        cell = ws.cell(row=4, column=idx, value=pavadinimas)
+        cell = ws.cell(row=5, column=idx, value=pavadinimas)
         cell.font = Font(bold=False) # Nuimtas paryškinimas
         cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
         cell.border = thin_border
@@ -76,8 +76,8 @@ def irasyti_antrastes(kaminas_obj: Kaminas):
         col_letter = cell.column_letter
         ws.column_dimensions[col_letter].width = 15
 
-    # 4 eilutės aukštis (didiname, nes pavadinimai ilgi ir turi talpintis langelyje)
-    ws.row_dimensions[4].height = 130 
+    # 5 eilutės aukštis (didiname, nes pavadinimai ilgi ir turi talpintis langelyje)
+    ws.row_dimensions[5].height = 130 
 
     # 4. Matmenų įrašymas po stulpeliu "Ortakio diametras, matmenys, m"
     
@@ -87,9 +87,9 @@ def irasyti_antrastes(kaminas_obj: Kaminas):
             centered_alignment = Alignment(horizontal="center", vertical="center")
             
             if kaminas_obj.forma == 'A':
-                # Apvalus: reikšmė į pirmą langelį po fraze (5 eilutė)
+                # Apvalus: reikšmė į pirmą langelį po fraze (6 eilutė)
                 reiksme = f"{(kaminas_obj.skersmuo / 100):.2f}".replace('.', ',')
-                cell = ws.cell(row=5, column=idx, value=reiksme)
+                cell = ws.cell(row=6, column=idx, value=reiksme)
                 cell.alignment = centered_alignment
             else:
                 # Stačiakampis: gylis į antrą (6 eilutė), plotis į trečią (7 eilutė)
@@ -97,11 +97,11 @@ def irasyti_antrastes(kaminas_obj: Kaminas):
                 p_m = f"{(kaminas_obj.plotis / 100):.2f}".replace('.', ',')
                 
                 # Gylis
-                cell_g = ws.cell(row=6, column=idx, value=g_m)
+                cell_g = ws.cell(row=7, column=idx, value=g_m)
                 cell_g.alignment = centered_alignment
                 
                 # Plotis
-                cell_p = ws.cell(row=7, column=idx, value=p_m)
+                cell_p = ws.cell(row=8, column=idx, value=p_m)
                 cell_p.alignment = centered_alignment
     
    # 5. Skerspjūvio ploto F skaičiavimas naudojant Excel formules
@@ -121,18 +121,18 @@ def irasyti_antrastes(kaminas_obj: Kaminas):
         col_m = get_column_letter(idx_matmenys) # Matmenų stulpelio raidė
         
         if kaminas_obj.forma == 'A':
-            # Apvalus: (D^2 * 3.14) / 4. D yra 5-oje eilutėje.
+            # Apvalus: (D^2 * 3.14) / 4. D yra 6-oje eilutėje.
             # Excel formulė: =(Raidė5^2*3.14)/4
-            formule_a = f"=({col_m}5^2*3.14)/4"
-            cell_f = ws.cell(row=5, column=idx_plotas, value=formule_a)
+            formule_a = f"=({col_m}6^2*3.14)/4"
+            cell_f = ws.cell(row=6, column=idx_plotas, value=formule_a)
             cell_f.number_format = '0.0000' # Užtikrina 4 skaičius po kablelio
             cell_f.alignment = centered_alignment
             
         else:
-            # Stačiakampis: Gylis (6 eilutė) * Plotis (7 eilutė)
+            # Stačiakampis: Gylis (7 eilutė) * Plotis (8 eilutė)
             # Excel formulė: =Raidė6*Raidė7
-            formule_s = f"={col_m}6*{col_m}7"
-            cell_f = ws.cell(row=6, column=idx_plotas, value=formule_s)
+            formule_s = f"={col_m}7*{col_m}8"
+            cell_f = ws.cell(row=7, column=idx_plotas, value=formule_s)
             cell_f.number_format = '0.0000'
             cell_f.alignment = centered_alignment
 
@@ -140,8 +140,8 @@ def irasyti_antrastes(kaminas_obj: Kaminas):
     tasku_skaicius = kaminas_obj.tasku_skaicius
     
     if tasku_skaicius > 1:
-        pirma_eil = 5
-        paskutine_eil = 5 + tasku_skaicius - 1
+        pirma_eil = 6
+        paskutine_eil = 6 + tasku_skaicius - 1
 
         for col in range(1, 4):  # A=1, B=2, C=3
             ws.merge_cells(
@@ -192,14 +192,14 @@ def irasyti_antrastes(kaminas_obj: Kaminas):
 
             # Įrašome koeficientą K tiek kartų, kiek yra matavimo taškų
             if idx_k:
-                for r in range(5, 5 + kaminas_obj.tasku_skaicius):
+                for r in range(6, 6 + kaminas_obj.tasku_skaicius):
                     cell = ws.cell(row=r, column=idx_k, value=koef_k)
                     cell.number_format = '0.000'
                     cell.alignment = Alignment(horizontal="center", vertical="center")
 
             # Įrašome neapibrėžtį A į du langelius po fraze
             if idx_a:
-                for r in [5, 6]:
+                for r in [6, 7]:
                     cell = ws.cell(row=r, column=idx_a, value=neapibreztis_a)
                     cell.number_format = '0.000'
                     cell.alignment = Alignment(horizontal="center", vertical="center")

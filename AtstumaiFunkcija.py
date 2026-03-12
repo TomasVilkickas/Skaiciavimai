@@ -90,13 +90,13 @@ def vykdyti_atstumai(kaminas: Kaminas):
         center_style = Alignment(horizontal='center', vertical='center')
         
         # Išvalome senas reikšmes D5:D30
-        for r in range(5, 31):
+        for r in range(6, 32):
             cell = ws.cell(row=r, column=4)
             cell.value = None
             
         # Įrašome naujas reikšmes
         for i, verte in enumerate(atstumai):
-            cell = ws.cell(row=5 + i, column=4)
+            cell = ws.cell(row=6 + i, column=4)
             cell.value = verte
             cell.alignment = center_style
             
