@@ -56,16 +56,25 @@ def irasyti_antrastes2(kaminas_obj):
 
     paemimas_headers = [
         "Matavimo data", "Ėminių registracijos Nr. T-107-2026-E-", "Objekto pavadinimas, adresas, taršos šaltinio Nr.",
-        ortakio_pav, "Skerspjūvio plotas A (m2)", "Temperatūra ortakyje tor (°C)", "Vidutinis srauto greitis ortakyje wor (m/s)",
+        ortakio_pav, "Skerspjūvio plotas A (m2)", "Temperatūra ortakyje tor (°C)", "Srauto greitis ortakyje wor (m/s)",
         "Atmosferinis slėgis P (hPa)", "Statinis slėgis ortakyje ΔPor (hPa)", "Slėgis prieš rotametrą ΔPr (±hPa)",
         "Antgalio diametras da (mm)", "Prasiurbtas dujų tūris Vm (m3)", "Siurbimo laikas t (min)", "Siurbimo greitis Vo (l/min)",
         "Siurbiamų dujų temperatūra prieš rotametrą tr (°C)", "O2iš (%) (ore 21 %)", "CO2iš (%) (ore 0,04 %)",
-        "Darbuotojo inicialai, data", "Pastabos", "Išmatuota O2 koncentracija (%)", "Išmatuota CO2 koncentracija (%)", "Temperatūra ortakyje tor (°C)"
-    ]
+        "Darbuotojo inicialai, data", "Pastabos", "Išmatuota O2 koncentracija (%)", "Išmatuota CO2 koncentracija (%)", "Temperatūra ortakyje tor (°C)",
+        "",  # Praleidžiamas vienas stulpelis (W stulpelis)
+        "Išmatuotas diferencinis slėgis taškuose, Pdi, hPa", 
+        "Srauto greitis ortakyje wor (m/s)", 
+        "Izokinetiškumas (0,95-1,15)", 
+        "Pito vamzdelio koeficientas, K"
+        ]
     
     # Įrašome antraštes (5 eilutė)
     formatuoti_eilute(ws_paemimas, 5, paemimas_headers, plotis=14)
-    
+    # Nuimame rėmelius iš tuščio W5 langelio
+    # W stulpelis yra 23-as
+    empty_cell = ws_paemimas.cell(row=5, column=23)
+    empty_cell.border = Border()  # Sukuria tuščią rėmelį (be linijų)
+
     # Įrašome lapo pavadinimą (2 eilutė, nuo A iki V stulpelio)
     ws_paemimas.merge_cells(start_row=2, start_column=1, end_row=2, end_column=22) # V stulpelis yra 22-as
     title_p = ws_paemimas.cell(row=2, column=1)
