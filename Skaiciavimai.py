@@ -5,6 +5,7 @@ from MatavimoVieta import Kaminas
 from AtstumaiFunkcija import vykdyti_atstumai
 from Pavadinimai1Funkcija import irasyti_antrastes
 from Pavadinimai2Funkcija import irasyti_antrastes2
+from Pradiniai1Funkcija import sukurti_sablona, nuskaityti_ir_perkelti_duomenis
 from GreitisSPFunkcija import spalvinti_greitis
 from KoncentracijaSPFunkcija import spalvinti_koncentracija
 from SverimasSPFunkcija import spalvinti_sverimas
@@ -42,6 +43,29 @@ def pagrindine_programa():
     vykdyti_atstumai(Kaminas) 
     irasyti_antrastes(Kaminas)
     irasyti_antrastes2(Kaminas)
+    
+    # 2. ĮTERPIAME PAUZĘ IR PRADINIŲ DUOMENŲ PILDYMĄ ČIA
+    print("\n" + "="*60)
+    print(">>> ANTRAŠTĖS SUFORMUOTOS. DABAR RUOŠIAMAS 'Pradiniai.xlsx' <<<")
+    
+    # Sukuriame šabloną (jei reikia, su patikra, kad neperrašytų esamo)
+    sukurti_sablona(Kaminas) 
+    
+    # Atidarome failą vartotojui
+    failas_pradiniai = "Pradiniai.xlsx"
+    if os.path.exists(failas_pradiniai):
+        os.startfile(failas_pradiniai)
+        print(f"Failas '{failas_pradiniai}' atidarytas. Užpildykite ir išsaugokite.")
+    
+    print("="*60)
+    
+    # Stabdomas Python procesas
+    input("\nKai užbaigsite pildyti 'Pradiniai.xlsx', paspauskite ENTER čia...")
+    nuskaityti_ir_perkelti_duomenis(Kaminas)
+
+    # 3. TĘSIAME TOLIAU (Spalvinimas ir kiti skaičiavimai)
+    print("\nTęsiama programa: spalvinami lapai ir baigiami skaičiavimai...")
+
     spalvinti_greitis(Kaminas)
     spalvinti_koncentracija(Kaminas)
     spalvinti_sverimas(Kaminas)
