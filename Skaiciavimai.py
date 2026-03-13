@@ -6,6 +6,7 @@ from AtstumaiFunkcija import vykdyti_atstumai
 from Pavadinimai1Funkcija import irasyti_antrastes
 from Pavadinimai2Funkcija import irasyti_antrastes2
 from GreitisSPFunkcija import spalvinti_greitis
+from KoncentracijaSPFunkcija import spalvinti_koncentracija
 from SverimasSPFunkcija import spalvinti_sverimas
 
 def sukurti_rezultatu_faila():
@@ -14,9 +15,7 @@ def sukurti_rezultatu_faila():
     if os.path.exists(failo_pavadinimas):
         print(f"1. Failas {failo_pavadinimas} jau egzistuoja.")
         return
-
-    time.sleep(2)
-
+     
     lapai = ["Greitis", "H2O", "Paėmimas", "Aerodinamika", "Koncentracija", "Svėrimas", "Koncentracijos ribinės vertės"]
     with pd.ExcelWriter(failo_pavadinimas, engine='openpyxl') as writer:
         for lapas in lapai:
@@ -44,6 +43,7 @@ def pagrindine_programa():
     irasyti_antrastes(Kaminas)
     irasyti_antrastes2(Kaminas)
     spalvinti_greitis(Kaminas)
+    spalvinti_koncentracija(Kaminas)
     spalvinti_sverimas(Kaminas)
     print("\n=== PROGRAMOS PABAIGA (Patikrinkite Rezultatai.xlsx) ===")
 
