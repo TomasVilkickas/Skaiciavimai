@@ -1,3 +1,4 @@
+import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, Border, Side, Font
 from openpyxl.utils import get_column_letter
@@ -44,8 +45,9 @@ def perkelti_paemimas_duomenis(kaminas_obj=None):
     ws_rez = wb_rez["Paėmimas"]
 
     stulpeliu_map = {}
+    temp_count = 0  # Skaitiklis temperatūros stulpeliams
     
-    # 1. GRIEŽTA PAIEŠKA (O2 ir CO2)
+    # 1. PAIEŠKA (O2, CO2 ir antra Temperatūra)
     for cell in ws_rez[5]:
         if cell.value is None: continue
         txt = str(cell.value).lower().replace("₂", "2").strip()
@@ -55,9 +57,17 @@ def perkelti_paemimas_duomenis(kaminas_obj=None):
                 stulpeliu_map["CO2"] = cell.column
             elif "o2" in txt:
                 stulpeliu_map["O2"] = cell.column
+           
+              # ŠITA DALIS PAKEISTA:
+        # Temperatūros ieškome nepriklausomai nuo to, ar yra žodis "išmatuota".
+        # Taip pat pridėtas skaitiklis (temp_count), kad praleistų pirmąjį stulpelį.
+        if "temperatūra" in txt or "tor" in txt:
+            temp_count += 1
+            if temp_count == 3: # <--- Čia užtikriname, kad imtų tik TREČIĄ sutaptį
+                stulpeliu_map["TEMP"] = cell.column
 
-    # 2. DUOMENŲ PERKĖLIMAS (O2 iš G, CO2 iš H)
-    darbo_laukai = {"G": "O2", "H": "CO2"}
+    # 2. DUOMENŲ PERKĖLIMAS (O2 iš G, CO2 iš H, TEMP iš I)
+    darbo_laukai = {"G": "O2", "H": "CO2", "I": "TEMP"}
     
     thin_side = Side(border_style="thin")
     remelis = Border(left=thin_side, right=thin_side, top=thin_side, bottom=thin_side)
@@ -72,15 +82,16 @@ def perkelti_paemimas_duomenis(kaminas_obj=None):
                 target.value = val
                 target.alignment = centravimas
                 target.border = remelis
-                target.number_format = '0.00'
+                # Temperatūrai vienas skaičius po kablelio, kitiems du
+                target.number_format = '0.0' if raktas == "TEMP" else '0.00'
             
             # Vidurkio formulė
             col_let = get_column_letter(rez_col_index)
             v_cell = ws_rez.cell(row=9, column=rez_col_index)
             v_cell.value = f"=AVERAGE({col_let}6:{col_let}8)"
-            v_cell.font = Font(bold=True)
+            v_cell.font = Font(bold=False)
             v_cell.alignment = centravimas
             v_cell.border = remelis
-            v_cell.number_format = '0.00'
+            v_cell.number_format = target.number_format
     
     wb_rez.save(failas_rez)
