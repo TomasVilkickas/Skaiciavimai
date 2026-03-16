@@ -113,33 +113,83 @@ def nuskaityti_ir_perkelti_duomenis(kaminas_obj):
     for coord in ["A6", "B6", "C6"]:
         ws[coord].alignment = centravimas
 
-    # --- PERKĖLIMAS Į LAPĄ "PAĖMIMAS" ---
-    ws_paemimas = wb["Paėmimas"]
+    # --- PERKĖLIMAS Į LAPUS "PAĖMIMAS" IR "AERODINAMIKA" SU RĖMELIAIS ---
+    lapiu_sarasas = ["Paėmimas", "Aerodinamika"]
     tasku_sk = kaminas_obj.tasku_skaicius
     
-    # Apibrėžiame stulpelius ir jų atitinkamas reikšmes
-    perkeliami_duomenys = {
-        "A": duomenys['data'],
-        "B": duomenys['reg_nr'],
-        "C": duomenys['objektas']
-    }
+    # Apibrėžiame rėmelį [cite: 2026-03-03]
+    thin_border = Border(
+        left=Side(style='thin'), right=Side(style='thin'), 
+        top=Side(style='thin'), bottom=Side(style='thin')
+    )
 
-    for col_let, reiksme in perkeliami_duomenys.items():
-        # 1. Įrašome reikšmę į 6-ąją eilutę
-        cell = ws_paemimas[f"{col_let}6"]
-        cell.value = reiksme
-        cell.alignment = centravimas
+    perkeliami_duomenys = {"A": duomenys['data'], "B": duomenys['reg_nr'], "C": duomenys['objektas']}
+
+    for pavadinimas in lapiu_sarasas:
+        if pavadinimas in wb.sheetnames:
+            ws_temp = wb[pavadinimas]
+            pabaigos_eilute = 6 + (tasku_sk - 1 if tasku_sk > 1 else 0)
+            
+            for col_let, reiksme in perkeliami_duomenys.items():
+                # Užpildome pagrindinį langelį
+                cell = ws_temp[f"{col_let}6"]
+                cell.value = reiksme
+                
+                # Pritaikome rėmelius visiems langeliams rėžyje (kad nedingtų po suliejimo) [cite: 2026-03-03]
+                for r in range(6, pabaigos_eilute + 1):
+                    ws_temp.cell(row=r, column=list(perkeliami_duomenys.keys()).index(col_let) + 1).border = thin_border
+                
+                # Suliejame ir centruojame
+                if tasku_sk > 1:
+                    ws_temp.merge_cells(f"{col_let}6:{col_let}{pabaigos_eilute}")
+                
+                cell.alignment = centravimas
+
+    # --- PERKĖLIMAS Į LAPĄ "KONCENTRACIJA" (FIKSUOTOS 3 EILUTĖS) ---
+    if "Koncentracija" in wb.sheetnames:
+        ws_konc = wb["Koncentracija"]
         
-        # 2. Jei taškų skaičius > 1, suliejame langelius nuo 6 iki (6 + taškų_sk - 1)
-        if tasku_sk > 1:
-            pabaigos_eilute = 6 + tasku_sk - 1
-            merge_range = f"{col_let}6:{col_let}{pabaigos_eilute}"
+        # 1. Nustatome eilučių aukštį (pvz., padidiname iki 25) [cite: 2026-03-03]
+        for r_idx in range(6, 9):
+            ws_konc.row_dimensions[r_idx].height = 25
             
-            # Prieš suliejant įsitikiname, kad stilius bus pritaikytas visam rėžiui
-            ws_paemimas.merge_cells(merge_range)
+        for col_let, reiksme in perkeliami_duomenys.items():
+            # 2. Įrašome reikšmę į viršutinį langelį
+            cell = ws_konc[f"{col_let}6"]
+            cell.value = reiksme
             
-            # Openpyxl centre-alignment po suliejimo reikalauja, kad viršutinis kairysis langelis turėtų stilių
-            ws_paemimas[f"{col_let}6"].alignment = centravimas
+            # 3. Uždedame rėmelius visoms 3 eilutėms [cite: 2026-03-03]
+            for r_idx in range(6, 9):
+                ws_konc[f"{col_let}{r_idx}"].border = thin_border
+            
+            # 4. Suliejame lygiai 3 eilutes (6, 7, 8)
+            ws_konc.merge_cells(f"{col_let}6:{col_let}8")
+            cell.alignment = centravimas
+    
+    # --- PERKĖLIMAS Į LAPĄ "SVĖRIMAS" (A6:A16 ir B6:B16) ---
+    if "Svėrimas" in wb.sheetnames:
+        ws_sverimas = wb["Svėrimas"]
+        
+        # Apibrėžiame duomenis konkretiems stulpeliams
+        sverimo_duomenys = {
+            "A": duomenys['reg_nr'],
+            "B": duomenys['objektas']
+        }
+        
+        for col_let, reiksme in sverimo_duomenys.items():
+            # 1. Įrašome reikšmę į 6-ąją eilutę
+            cell = ws_sverimas[f"{col_let}6"]
+            cell.value = reiksme
+            
+            # 2. Uždedame rėmelius visam rėžiui nuo 6 iki 16 eilutės [cite: 2026-03-03]
+            for r_idx in range(6, 17):
+                ws_sverimas[f"{col_let}{r_idx}"].border = thin_border
+            
+            # 3. Suliejame langelius (nuo 6 iki 16 eilutės yra 11 eilučių)
+            ws_sverimas.merge_cells(f"{col_let}6:{col_let}16")
+            
+            # 4. Centruojame
+            cell.alignment = centravimas
 
     # Išsaugome Rezultatai.xlsx failą
     wb.save(failo_rezultatai)
