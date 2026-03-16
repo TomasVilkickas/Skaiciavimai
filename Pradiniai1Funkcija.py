@@ -193,4 +193,3 @@ def nuskaityti_ir_perkelti_duomenis(kaminas_obj):
 
     # Išsaugome Rezultatai.xlsx failą
     wb.save(failo_rezultatai)
-    print(f"Duomenys perkelti: {duomenys['data']}, {duomenys['reg_nr']}")
