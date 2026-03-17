@@ -1,7 +1,6 @@
+import pandas as pd
 import openpyxl
-from openpyxl.styles import Alignment, Font
-from openpyxl.styles import Border, Side, PatternFill
-from copy import copy
+from openpyxl.styles import Alignment, Font, Border, Side, PatternFill
 
 def spalvinti_greitis(kaminas):
     file_name = "Rezultatai.xlsx"
@@ -9,186 +8,129 @@ def spalvinti_greitis(kaminas):
     
     try:
         wb = openpyxl.load_workbook(file_name)
-    except FileNotFoundError:
-        print(f"Klaida: Failas {file_name} nerastas.")
+        ws = wb[sheet_name]
+    except Exception as e:
+        print(f"Klaida atidarant failą: {e}")
         return
 
-    ws = wb[sheet_name]
-    
-    # Spalvų ir rėmelių nustatymai
+    # --- NUSTATYMAI ---
     zalia_fill = PatternFill(start_color="92D050", end_color="92D050", fill_type="solid")
     geltona_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
+    oranzine_fill = PatternFill(start_color="FFC000", end_color="FFC000", fill_type="solid")
     thin_side = Side(style="thin")
     pilnas_remelis = Border(left=thin_side, right=thin_side, top=thin_side, bottom=thin_side)
 
-    # 1. D6 langelio spalvinimas žaliai
-    ws["D6"].fill = zalia_fill
-    ws["D6"].border = pilnas_remelis
-
-    # 2. Frazių paieška ir pirminis 6-os eilutės spalvinimas
-    zalia_frazes = [
-        "diferencinis slėgis", 
-        "Pito vamzdelio koeficientas",
-        "Temperatūra ortakyje",
-        "Atmosferinis slėgis",
-        "Statinis slėgis"
-    ]
-    
-    geltona_frazes = [
-        "Dujų slėgis kamine",
-        "Dujų mol. masė",
-        "Dujų srauto greitis matavimo taškuose"
-    ]
-
-    paskutinis_duomenu_stulpelis = 4
-    for cell in ws[5]:
-        if cell.value:
-            verte = str(cell.value).lower().strip()
-            col = cell.column
-            if col > paskutinis_duomenu_stulpelis:
-                paskutinis_duomenu_stulpelis = col
-
-            target_cell = ws.cell(row=6, column=col)
-            if any(f.lower() in verte for f in zalia_frazes):
-                target_cell.fill = zalia_fill
-                target_cell.border = pilnas_remelis
-            if any(f.lower() in verte for f in geltona_frazes):
-                target_cell.fill = geltona_fill
-                target_cell.border = pilnas_remelis
-
-    # 3. Formato kopijavimas žemyn (Identinis spalvų ir rėmų klonavimas)
     start_row = 6
     tasku_skaicius = getattr(kaminas, 'tasku_skaicius', 0)
     end_row = start_row + tasku_skaicius - 1
-
-    if tasku_skaicius > 1:
-        for col in range(4, paskutinis_duomenu_stulpelis + 1):
-            source_cell = ws.cell(row=start_row, column=col)
-            if source_cell.fill and source_cell.fill.fill_type is not None:
-                source_fill = copy(source_cell.fill)
-                for r in range(start_row + 1, end_row + 1):
-                    new_cell = ws.cell(row=r, column=col)
-                    new_cell.fill = source_fill
-                    new_cell.border = pilnas_remelis
-
-    # 4. A-C stulpelių suliejimas (nuo 6 eilutės)
-    if tasku_skaicius > 0:
-        for merged in list(ws.merged_cells.ranges):
-            if merged.min_col <= 3 and merged.min_row >= start_row:
-                ws.unmerge_cells(str(merged))
-        for col in range(1, 4):
-            ws.merge_cells(start_row=start_row, start_column=col, end_row=end_row, end_column=col)
-            for r in range(start_row, end_row + 1):
-                ws.cell(row=r, column=col).border = pilnas_remelis
-
-    # --- STACIONARŪS STULPELIAI ---
-    # Šis rėmelis atsiras 6-oje eilutėje, iškart po paskutinio užpildyto duomenų stulpelio
-    paskutinis_spalvotas = 0
-    for cell in ws[6]:
-        if cell.fill and cell.fill.fill_type == "solid":
-            paskutinis_spalvotas = cell.column
-
-    start_col = paskutinis_spalvotas + 1
-    start_row_block = 6
     
-    # 5 stulpelių konfigūracija: (stulpelio_indeksas, spalvų_sąrašas)
-    # spalvų_sąrašas: True = spalvoti, False = be spalvos
-    konfigūracija = {
-        0: ([True, False, False, False], geltona_fill), # 1 stulpelis
-        1: ([True, True, True, False], zalia_fill),     # 2 stulpelis
-        2: ([True, True, False, False], geltona_fill),  # 3 stulpelis
-        3: ([True, True, False, False], geltona_fill),  # 4 stulpelis
-        4: ([True, True, False, False], zalia_fill)     # 5 stulpelis
+    # Tikrinimo frazės
+    tik_zalia = ["diferencinis slėgis"]
+    tik_oranzine = ["temperatūra ortakyje"]
+    miksas_zalia_oranzine = ["pito vamzdelio koeficientas", "atmosferinis slėgis", "statinis slėgis ortakyje"]
+    tik_geltona = ["dujų slėgis kamine", "dujų mol. masė", "dujų srauto greitis matavimo taškuose"]
+
+    # --- 1. KINTAMOSIOS DALIES SPALVINIMAS IR TIKSLUS GALO NUSTATYMAS ---
+    # Naudojame šį kintamąjį kaip „inkarą“ tolimesniems stulpeliams
+    paskutinis_duomenu_col = 4 
+
+    # Einame per stulpelius nuo D (4) iki lapo galo
+    for col in range(4, ws.max_column + 1):
+        header_val = str(ws.cell(row=5, column=col).value or "").lower().strip()
+        
+        # Tikriname, ar šis stulpelis yra kintamosios dalies dalis
+        yra_kintamas = any(f in header_val for f in tik_zalia + tik_oranzine + miksas_zalia_oranzine + tik_geltona)
+        
+        if yra_kintamas:
+            paskutinis_duomenu_col = col # Fiksuojame vėliausią rastą duomenų stulpelį
+            
+            for r in range(start_row, end_row + 1):
+                target_cell = ws.cell(row=r, column=col)
+                target_cell.border = pilnas_remelis
+                
+                if any(f in header_val for f in tik_zalia):
+                    target_cell.fill = zalia_fill
+                elif any(f in header_val for f in tik_oranzine):
+                    target_cell.fill = oranzine_fill
+                elif any(f in header_val for f in miksas_zalia_oranzine):
+                    target_cell.fill = zalia_fill if r == start_row else oranzine_fill
+                elif any(f in header_val for f in tik_geltona):
+                    target_cell.fill = geltona_fill
+
+    # --- 2. STACIONARŪS STULPELIAI (Prasideda iškart po paskutinio kintamo) ---
+    start_col = paskutinis_duomenu_col + 1
+    
+    # 5 stulpelių blokas (5x4)
+    konfig = {
+        0: ([1, 0, 0, 0], geltona_fill),
+        1: ([1, 1, 1, 0], zalia_fill),
+        2: ([1, 1, 0, 0], geltona_fill),
+        3: ([1, 1, 0, 0], geltona_fill),
+        4: ([1, 1, 0, 0], geltona_fill)
     }
 
-    for c_idx in range(5):
-        dabartinis_col = start_col + c_idx
-        spalvu_planas, spalva = konfigūracija[c_idx]
-        
-        for r_idx in range(4):
-            dabartine_eil = start_row_block + r_idx
-            target_cell = ws.cell(row=dabartine_eil, column=dabartinis_col)
-            
-            # Aprėminame visus bloko langelius
-            target_cell.border = pilnas_remelis
-            
-            # Spalviname pagal planą
-            if spalvu_planas[r_idx]:
-                target_cell.fill = spalva
+    for c_off in range(5):
+        curr_c = start_col + c_off
+        planas, spalva = konfig[c_off]
+        for r_off in range(4):
+            cell = ws.cell(row=6 + r_off, column=curr_c)
+            cell.border = pilnas_remelis
+            cell.fill = spalva if planas[r_off] else PatternFill(fill_type=None)
 
-        extra_start_col = start_col + 5  # Pradedame ten, kur baigėsi 5x4 blokas
-    
-    # 7 stulpelių spalvų planas (True = žalia, False = geltona)
-    # Seka: žalia, geltona, žalia, žalia, žalia, geltona, geltona
-    sekos_spalvos = [zalia_fill, geltona_fill, zalia_fill, zalia_fill, zalia_fill, geltona_fill, geltona_fill]
-
+    # 7 stulpelių blokas (7x2)
+    extra_col = start_col + 5
+    sekos_spalvos = [oranzine_fill, geltona_fill, geltona_fill, oranzine_fill, zalia_fill, geltona_fill, geltona_fill]
     for i, spalva in enumerate(sekos_spalvos):
-        curr_col = extra_start_col + i
-        for r_idx in range(2):  # Dvi eilutės (6 ir 7)
-            target_cell = ws.cell(row=6 + r_idx, column=curr_col)
-            target_cell.fill = spalva
-            target_cell.border = pilnas_remelis
+        curr_c = extra_col + i
+        for r_off in range(2):
+            cell = ws.cell(row=6 + r_off, column=curr_c)
+            cell.fill = spalva
+            cell.border = pilnas_remelis
 
-    # --- SPECIFINĖ STACIONARIŲ STULPELIŲ PABAIGA ---
-    # 1. Vienas langelis pirmoje eilutėje (6 eilutė) žaliai
-    zalias_langelis_col = extra_start_col + 7
-    zalias_langelis = ws.cell(row=6, column=zalias_langelis_col)
-    zalias_langelis.fill = zalia_fill
-    zalias_langelis.border = pilnas_remelis
+    # --- 3. SPECIFINĖ PABAIGA ---
+    # Oranžinis langelis
+    fin_col = extra_col + 7
+    ws.cell(row=6, column=fin_col).fill = oranzine_fill
+    ws.cell(row=6, column=fin_col).border = pilnas_remelis
     
-    # 2. Sekantis stulpelis: sulietos abi eilutės (6 ir 7), be spalvos
-    merge_col = zalias_langelis_col + 1
+    # Sulietas tuščias langelis (6-7 eilutės)
+    merge_col = fin_col + 1
     ws.merge_cells(start_row=6, start_column=merge_col, end_row=7, end_column=merge_col)
-    
-    # Rėmelio pritaikymas sulietam langeliui
-    for r_idx in range(2):
-        ws.cell(row=6 + r_idx, column=merge_col).border = pilnas_remelis
+    for r in [6, 7]:
+        cell = ws.cell(row=r, column=merge_col)
+        cell.border = pilnas_remelis
+        cell.fill = PatternFill(fill_type=None)
 
-    # --- STACIONARIOS EILUTĖS ---
-   # 1. PIRMA STACIONARI EILUTĖ (Tik rėmai iki greičio stulpelio)
-    eilute_po_lenteles = end_row + 1
-    ribinis_stulpelis = 1
-    for cell in ws[5]:
-        if cell.value and "Vidutinis dujų srauto greitis ortakyje w, m/s" in str(cell.value):
-            ribinis_stulpelis = cell.column
-            break
-    
-    for col in range(1, ribinis_stulpelis):
-        ws.cell(row=eilute_po_lenteles, column=col).border = pilnas_remelis
+    # --- 4. APATINĖS EILUTĖS (Naudojant tą patį paskutinis_duomenu_col) ---
+    # Rėmeliai pirmoje eilutėje po lentelės iki kintamos dalies galo
+    eilute_po = end_row + 1
+    for col in range(1, paskutinis_duomenu_col + 1):
+        ws.cell(row=eilute_po, column=col).border = pilnas_remelis
 
-    # 2. ANTROJI (ORANŽINĖ) EILUTĖ
-    dabartine_eil = eilute_po_lenteles + 1
-    
-    # A, B, C stulpeliai (rėmeliai)
+    # Oranžinė RPU eilutė
+    rpu_row = eilute_po + 1
+    # A, B, C rėmai
     for col in range(1, 4):
-        ws.cell(row=dabartine_eil, column=col).border = pilnas_remelis
+        ws.cell(row=rpu_row, column=col).border = pilnas_remelis
     
-    # D stulpelis (RPU***)
-    rpu_cell = ws.cell(row=dabartine_eil, column=4)
-    rpu_cell.value = "RPU***"
-    rpu_cell.font = Font(bold=True)
-    rpu_cell.border = pilnas_remelis
-    rpu_cell.alignment = Alignment(horizontal="center", vertical="center")
+    # RPU langelis (D stulpelis)
+    ws.cell(row=rpu_row, column=4).value = "RPU***"
+    ws.cell(row=rpu_row, column=4).border = pilnas_remelis
     
-    # Oranžinis blokas (E stulpelis iki tos pačios ribos, kur baigiasi pirma eilutė)
-    # Naudojame ribinis_stulpelis - 1, kad oranžinė dalis neviršytų pagrindinės lentelės pločio
-    oranz_end_col = ribinis_stulpelis - 1
-    if oranz_end_col >= 5:
-        ws.merge_cells(start_row=dabartine_eil, start_column=5, end_row=dabartine_eil, end_column=oranz_end_col)
-        oranzinis_blokas = ws.cell(row=dabartine_eil, column=5)
-        oranzinis_blokas.value = "Kai bus 2 linijos, RPU*** yra 2 linijos vidurinis taškas"
-        oranzinis_blokas.fill = PatternFill(start_color="FF9900", end_color="FF9900", fill_type="solid")
-        oranzinis_blokas.font = Font(bold=True)
-        oranzinis_blokas.alignment = Alignment(horizontal="center", vertical="center")
-        
-        # Rėmeliai oranžiniam blokui
-        for col in range(5, oranz_end_col + 1):
-            ws.cell(row=dabartine_eil, column=col).border = pilnas_remelis
+    # Oranžinis tekstas
+    if paskutinis_duomenu_col >= 5:
+        ws.merge_cells(start_row=rpu_row, start_column=5, end_row=rpu_row, end_column=paskutinis_duomenu_col)
+        o_cell = ws.cell(row=rpu_row, column=5)
+        o_cell.value = "Kai bus 2 linijos, RPU*** yra 2 linijos vidurinis taškas"
+        o_cell.fill = PatternFill(start_color="FFC000", end_color="FFC000", fill_type="solid")
+        o_cell.alignment = Alignment(horizontal="center")
+        for col in range(5, paskutinis_duomenu_col + 1):
+            ws.cell(row=rpu_row, column=col).border = pilnas_remelis
 
-    # 3. TRYS PASKUTINĖS EILUTĖS (3x3 blokelis A, B, C stulpeliuose)
-    for i in range(1, 4):
-        kitas_eil = dabartine_eil + i
-        for col in range(1, 4):
-            ws.cell(row=kitas_eil, column=col).border = pilnas_remelis
-
-    wb.save(file_name)
+            # --- FIX: A-D stulpelių rėmeliai visai lentelei ---
+        for col in range(1, 5):  # A=1, B=2, C=3, D=4
+            for r in range(start_row, end_row + 1):
+                cell = ws.cell(row=r, column=col)
+                cell.border = pilnas_remelis
+    
+                wb.save(file_name)
