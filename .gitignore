@@ -12,3 +12,15 @@ venv/
 # VS Code ar kiti įrankiai
 .vscode/
 .idea/
+
+# Visual Studio laikini failai
+.vs/
+*.sln
+*.sqlite
+*.suo
+*.user
+*.db
+
+# Windows sistemos šiukšlės
+Thumbs.db
+desktop.ini

@@ -123,16 +123,30 @@ def perkelti_greitis_duomenis(kaminas_obj):
                 cell.number_format = "0.00"
 
                 # --- NAUJA: Perkėlimas į "Paėmimas" lapą į X stulpelį ---
-            for t_idx in range(tasku_sk):
-                reiksme = df_is[pav].iloc[t_idx]
-                p_cell = ws_paemimas.cell(row=dabartine_eilute, column=x_stulpelis)
-                p_cell.value = reiksme
-                p_cell.alignment = centravimas
-                p_cell.number_format = "0.00"
-                dabartine_eilute += 1
+            # --- Diferencinio slėgio perkėlimas į "Paėmimas" lapą ---
+    x_stulpelis = 24  # X stulpelis
+    dabartine_eilute = 6  # Pradinė eilutė lape "Paėmimas"
+
+    # Pridedame ciklą per filtrų skaičių
+    for f in range(kaminas_obj.filtru_skaicius):
+        for l in range(1, liniju_sk + 1):
+            pav = f"Išmatuotas diferencinis slėgis taškuose {l} linija, Pdi, hPa"
             
-            # Po kiekvienos linijos (jei jų daugiau nei 1) pridedame 4 eilučių tarpą
-            dabartine_eilute += 4
+            if pav in df_is.columns:
+                # Perrašome visus tos linijos taškus
+                for t_idx in range(tasku_sk):
+                    reiksme = df_is[pav].iloc[t_idx]
+                    p_cell = ws_paemimas.cell(row=dabartine_eilute, column=x_stulpelis)
+                    p_cell.value = reiksme
+                    p_cell.alignment = centravimas
+                    p_cell.number_format = "0.00"
+                    dabartine_eilute += 1
+                
+                # Po kiekvienos linijos pridedame 4 eilučių tarpą (kaip buvo numatyta)
+                dabartine_eilute += 4
+        
+        # Jei tarp filtrų blokų reikia papildomo tarpo arba specifinio eilučių valdymo, 
+        # jį galima koreguoti čia. Šiuo metu ciklas tiesiog tęs pildymą žemyn.
                 
 
     # 4. Perkeliame atmosferinį bei statinį slėgį (atkartojame per visus taškus)

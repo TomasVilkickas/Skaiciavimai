@@ -8,6 +8,7 @@ from Pavadinimai2Funkcija import irasyti_antrastes2
 from Pradiniai1Funkcija import sukurti_sablona, nuskaityti_ir_perkelti_duomenis
 from Pradiniai2Funkcija import nuskaityti_ir_perkelti_Greitis, perkelti_greitis_duomenis
 from Pradiniai3Funkcija import nuskaityti_ir_perkelti_Paemimas, perkelti_paemimas_duomenis 
+from Pradiniai4Funkcija import sukurti_Paemimas_komplektus, perkelti_paemimas_komplektus
 from GreitisSPFunkcija import spalvinti_greitis
 from KoncentracijaSPFunkcija import spalvinti_koncentracija
 from SverimasSPFunkcija import spalvinti_sverimas
@@ -54,6 +55,8 @@ def pagrindine_programa():
     sukurti_sablona(Kaminas)
     nuskaityti_ir_perkelti_Greitis(Kaminas)
     nuskaityti_ir_perkelti_Paemimas(Kaminas)
+    sukurti_Paemimas_komplektus(Kaminas)
+    zodynas = sukurti_Paemimas_komplektus(Kaminas)
     
     # Atidarome failą vartotojui
     failas_pradiniai = "Pradiniai.xlsx"
@@ -68,6 +71,7 @@ def pagrindine_programa():
     nuskaityti_ir_perkelti_duomenis(Kaminas)
     perkelti_greitis_duomenis(Kaminas)
     perkelti_paemimas_duomenis(Kaminas)
+    perkelti_paemimas_komplektus(Kaminas, zodynas)
 
     # 3. TĘSIAME TOLIAU (Spalvinimas ir kiti skaičiavimai)
     print("\nTęsiama programa: spalvinami lapai ir baigiami skaičiavimai...")
