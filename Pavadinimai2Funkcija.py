@@ -63,9 +63,7 @@ def irasyti_antrastes2(kaminas_obj):
         "Darbuotojo inicialai, data", "Pastabos", "Išmatuota O2 koncentracija (%)", "Išmatuota CO2 koncentracija (%)", "Temperatūra ortakyje tor (°C)",
         "",  # Praleidžiamas vienas stulpelis (W stulpelis)
         "Išmatuotas diferencinis slėgis taškuose, Pdi, hPa", 
-        "Srauto greitis ortakyje wor (m/s)", 
-        "Izokinetiškumas (0,95-1,15)", 
-        "Pito vamzdelio koeficientas, K"
+        "Izokinetiškumas (0,95-1,15)"
         ]
     
     # Įrašome antraštes (5 eilutė)

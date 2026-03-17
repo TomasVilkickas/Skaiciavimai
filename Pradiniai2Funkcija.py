@@ -93,6 +93,11 @@ def perkelti_greitis_duomenis(kaminas_obj):
     ws_rez = wb_rez[lapas]
     centravimas = Alignment(horizontal="center", vertical="center", wrap_text=True)
 
+    # Surandame lapą "Paėmimas" ir nustatome pradinę poziciją X stulpelyje (24 stulpelis)
+    ws_paemimas = wb_rez["Paėmimas"]
+    dabartine_eilute = 6
+    x_stulpelis = 24  # X raidė atitinka 24-ą stulpelį
+
     # Surandame Rezultatai.xlsx stulpelių koordinates pagal pavadinimus
     rez_headers = {}
     for col in range(1, ws_rez.max_column + 1):
@@ -106,8 +111,9 @@ def perkelti_greitis_duomenis(kaminas_obj):
     # 3. Perkeliame Pdi reikšmes
     for l in range(1, liniju_sk + 1):
         pav = f"Išmatuotas diferencinis slėgis taškuose {l} linija, Pdi, hPa"
-        if pav in df_is.columns and pav in rez_headers:
-            col_dest = rez_headers[pav]
+        if pav in df_is.columns:
+            if pav in rez_headers:
+                col_dest = rez_headers[pav]
             for t_idx in range(tasku_sk):
                 # .iloc[t_idx] paima reikšmę iš konkrečios eilutės
                 reiksme = df_is[pav].iloc[t_idx]
@@ -115,6 +121,18 @@ def perkelti_greitis_duomenis(kaminas_obj):
                 cell.value = reiksme
                 cell.alignment = centravimas
                 cell.number_format = "0.00"
+
+                # --- NAUJA: Perkėlimas į "Paėmimas" lapą į X stulpelį ---
+            for t_idx in range(tasku_sk):
+                reiksme = df_is[pav].iloc[t_idx]
+                p_cell = ws_paemimas.cell(row=dabartine_eilute, column=x_stulpelis)
+                p_cell.value = reiksme
+                p_cell.alignment = centravimas
+                p_cell.number_format = "0.00"
+                dabartine_eilute += 1
+            
+            # Po kiekvienos linijos (jei jų daugiau nei 1) pridedame 4 eilučių tarpą
+            dabartine_eilute += 4
                 
 
     # 4. Perkeliame atmosferinį bei statinį slėgį (atkartojame per visus taškus)
