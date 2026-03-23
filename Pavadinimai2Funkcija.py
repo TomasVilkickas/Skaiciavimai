@@ -166,7 +166,7 @@ def irasyti_antrastes2(kaminas_obj):
         4: "Tuščio filtro/indo svėrimo data",
         8: "Atsakingo asmens inicialai, data",
         9: "Filtro/indo su ėminiu svėrimo data",
-        13: "Kietųjų dalelių svoris mf/Svorių pokytis (g) (<2,20 g filtro talpumas)",
+        13: "Kietųjų dalelių svoris mf/Svorių pokytis (g) (<2,00 g filtro talpumas)",
         14: "Atsakingo asmens inicialai, data",
         15: "Pastabos"
     }

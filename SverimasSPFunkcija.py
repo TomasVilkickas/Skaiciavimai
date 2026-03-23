@@ -60,21 +60,10 @@ def spalvinti_sverimas(kaminas: Kaminas):
                 bottom=(thin_side if r == e_row else None)
             )
 
-    for c in [1, 4, 8, 9, 14]: # A, D, H, I, N
+    for c in [ 4, 8, 9, 14]: # D, H, I, N
         apply_column_frame(c)
 
-    # B STULPELIS: Suliejimas ir rėmas (su apatiniu brūkšniu)
-    ws.merge_cells(start_row=s_row, start_column=2, end_row=e_row, end_column=2)
-    for r in range(s_row, e_row + 1):
-        cell = ws.cell(row=r, column=2)
-        cell.border = Border(
-            left=thin_side, 
-            right=thin_side, 
-            top=(thin_side if r == s_row else None),
-            bottom=(thin_side if r == e_row else None)
-        )
-
-    # C, E, F, G, J, K, L, M, O stulpeliai: Kiekvienas langelis atskirai
+      # C, E, F, G, J, K, L, M, O stulpeliai: Kiekvienas langelis atskirai
     atskiri = [3, 5, 6, 7, 10, 11, 12, 13, 15]
     for r in range(s_row, e_row + 1):
         for c in atskiri:

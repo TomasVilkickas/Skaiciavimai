@@ -73,56 +73,45 @@ def nuskaityti_ir_perkelti_duomenis(kaminas_obj):
     failo_pradiniai = "Pradiniai.xlsx"
     failo_rezultatai = "Rezultatai.xlsx"
     
-    # 1. NUSKAITYMAS: Pasiimame duomenis iš Excel į Python atmintį
-    # header=4 nurodo, kad stulpelių pavadinimai yra 5-oje eilutėje
+    # 1. NUSKAITYMAS
     df = pd.read_excel(failo_pradiniai, sheet_name="Pradiniai", header=4)
-    
     if df.empty:
         print("Klaida: Nerasta duomenų faile Pradiniai.xlsx!")
         return
 
-    # 2. ŽODYNAS: Sudedame duomenis į "krepšelį" (dictionary)
-    # iloc[0, x] paima pirmąją duomenų eilutę (tą, kurią jūs užpildėte)
-   # Pasiimame datą ir ją sutvarkome
+    # Sutvarkome datą
     zalia_data = df.iloc[0, 0]
-    
-    # Jei tai datos objektas, paverčiame į tekstą YYYY-MM-DD
     if pd.api.types.is_datetime64_any_dtype(zalia_data) or not isinstance(zalia_data, str):
         tikra_data = pd.to_datetime(zalia_data).strftime('%Y-%m-%d')
     else:
         tikra_data = zalia_data
 
     duomenys = {
-        'data': tikra_data,  # Naudojame sutvarkytą datą
+        'data': tikra_data,
         'reg_nr': df.iloc[0, 1],
         'objektas': df.iloc[0, 2]
     }
 
-    # 3. ĮRAŠYMAS: Atidarome Rezultatai.xlsx ir įrašome į konkrečias vietas [cite: 2026-03-03]
+    # 2. ĮRAŠYMAS naudojant openpyxl [cite: 2026-03-03]
     wb = load_workbook(failo_rezultatai)
-    ws = wb["Greitis"]
     
-    centravimas = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    # Apibrėžiame stilius, kad jie būtų pasiekiami visoje funkcijoje
+    side_thin = Side(style='thin')
+    thin_border = Border(left=side_thin, right=side_thin, top=side_thin, bottom=side_thin)
+    # Naujas lygiavimas: Horizontaliai centras, Vertikaliai viršus (top)
+    top_alignment = Alignment(horizontal="center", vertical="top", wrap_text=True)
 
-    # Įrašome reikšmes į langelius A6, B6, C6
-    ws["A6"] = duomenys['data']
-    ws["B6"] = duomenys['reg_nr']
-    ws["C6"] = duomenys['objektas']
+    # --- LAPAS "GREITIS" ---
+    if "Greitis" in wb.sheetnames:
+        ws_greitis = wb["Greitis"]
+        for col_let, reiksme in {"A": duomenys['data'], "B": duomenys['reg_nr'], "C": duomenys['objektas']}.items():
+            cell = ws_greitis[f"{col_let}6"]
+            cell.value = reiksme
+            cell.alignment = top_alignment
 
-    # Suformatuojame tuos langelius
-    for coord in ["A6", "B6", "C6"]:
-        ws[coord].alignment = centravimas
-
-    # --- PERKĖLIMAS Į LAPUS "PAĖMIMAS" IR "AERODINAMIKA" SU RĖMELIAIS ---
-    lapiu_sarasas = ["Paėmimas", "Aerodinamika"]
+    # --- LAPAI "PAĖMIMAS" IR "AERODINAMIKA" ---
+    lapiu_sarasas = ["Paėmimas", "Aerodinamika"] # Apibrėžiame čia, kad nekiltų "not defined" klaida
     tasku_sk = kaminas_obj.tasku_skaicius
-    
-    # Apibrėžiame rėmelį [cite: 2026-03-03]
-    thin_border = Border(
-        left=Side(style='thin'), right=Side(style='thin'), 
-        top=Side(style='thin'), bottom=Side(style='thin')
-    )
-
     perkeliami_duomenys = {"A": duomenys['data'], "B": duomenys['reg_nr'], "C": duomenys['objektas']}
 
     for pavadinimas in lapiu_sarasas:
@@ -131,65 +120,114 @@ def nuskaityti_ir_perkelti_duomenis(kaminas_obj):
             pabaigos_eilute = 6 + (tasku_sk - 1 if tasku_sk > 1 else 0)
             
             for col_let, reiksme in perkeliami_duomenys.items():
-                # Užpildome pagrindinį langelį
+                col_idx = list(perkeliami_duomenys.keys()).index(col_let) + 1
                 cell = ws_temp[f"{col_let}6"]
                 cell.value = reiksme
-                
-                # Pritaikome rėmelius visiems langeliams rėžyje (kad nedingtų po suliejimo) [cite: 2026-03-03]
-                for r in range(6, pabaigos_eilute + 1):
-                    ws_temp.cell(row=r, column=list(perkeliami_duomenys.keys()).index(col_let) + 1).border = thin_border
-                
-                # Suliejame ir centruojame
-                if tasku_sk > 1:
-                    ws_temp.merge_cells(f"{col_let}6:{col_let}{pabaigos_eilute}")
-                
-                cell.alignment = centravimas
+                cell.alignment = top_alignment
 
-    # --- PERKĖLIMAS Į LAPĄ "KONCENTRACIJA" (FIKSUOTOS 3 EILUTĖS) ---
+                if col_let in ["A", "B"]:
+                    # NESULIEJAME. Tik išorinis rėmas visam stulpelio blokui [cite: 2026-03-03]
+                    for r in range(6, pabaigos_eilute + 1):
+                        current_cell = ws_temp.cell(row=r, column=col_idx)
+                        # Kraštinės: kairė/dešinė visada, viršus tik 6 eilutei, apačia tik paskutinei
+                        current_cell.border = Border(
+                            left=side_thin, 
+                            right=side_thin, 
+                            top=side_thin if r == 6 else None, 
+                            bottom=side_thin if r == pabaigos_eilute else None
+                        )
+                else:
+                    # C stulpelis: lieka sulietas su pilnu rėmu [cite: 2026-03-03]
+                    for r in range(6, pabaigos_eilute + 1):
+                        ws_temp.cell(row=r, column=col_idx).border = thin_border
+                    if tasku_sk > 1:
+                        ws_temp.merge_cells(f"{col_let}6:{col_let}{pabaigos_eilute}")
+
+    # --- LAPAS "KONCENTRACIJA" ---
     if "Koncentracija" in wb.sheetnames:
         ws_konc = wb["Koncentracija"]
         
-        # 1. Nustatome eilučių aukštį (pvz., padidiname iki 25) [cite: 2026-03-03]
+        # 1. Pirmiausia panaikiname senus suliejimus, jei jie egzistuoja (kad išvengtume klaidų) [cite: 2026-03-03]
+        for range_ in list(ws_konc.merged_cells.ranges):
+            if "C6" in range_ or "C7" in range_ or "C8" in range_:
+                ws_konc.unmerge_cells(str(range_))
+
+        # 2. Nustatome eilučių aukštį
         for r_idx in range(6, 9):
             ws_konc.row_dimensions[r_idx].height = 25
             
         for col_let, reiksme in perkeliami_duomenys.items():
-            # 2. Įrašome reikšmę į viršutinį langelį
-            cell = ws_konc[f"{col_let}6"]
-            cell.value = reiksme
+            col_idx = list(perkeliami_duomenys.keys()).index(col_let) + 1
             
-            # 3. Uždedame rėmelius visoms 3 eilutėms [cite: 2026-03-03]
-            for r_idx in range(6, 9):
-                ws_konc[f"{col_let}{r_idx}"].border = thin_border
-            
-            # 4. Suliejame lygiai 3 eilutes (6, 7, 8)
-            ws_konc.merge_cells(f"{col_let}6:{col_let}8")
-            cell.alignment = centravimas
-    
-    # --- PERKĖLIMAS Į LAPĄ "SVĖRIMAS" (A6:A16 ir B6:B16) ---
+            if col_let in ["A", "B"]:
+                # A ir B: Lygiavimas viršuje, be suliejimo, tik išorinis rėmas [cite: 2026-03-03]
+                for r_idx in range(6, 9):
+                    cell = ws_konc.cell(row=r_idx, column=col_idx)
+                    if r_idx == 6:
+                        cell.value = reiksme
+                    cell.alignment = Alignment(horizontal="center", vertical="top", wrap_text=True)
+                    cell.border = Border(
+                        left=side_thin, 
+                        right=side_thin, 
+                        top=side_thin if r_idx == 6 else None, 
+                        bottom=side_thin if r_idx == 8 else None
+                    )
+            elif col_let == "C":
+                # --- C STULPELIS: SULIEJAMAS, LYGIAVIMAS VIRŠUJE IR CENTRE ---
+                cell_c = ws_konc.cell(row=6, column=3)
+                cell_c.value = reiksme
+                
+                # SULIEJAME C6:C8 [cite: 2026-03-03]
+                ws_konc.merge_cells("C6:C8")
+                
+                # Nustatome stilių sulietam plotui
+                # Kadangi tai C stulpelis, nustatome horizontal="center" ir vertical="top"
+                cell_c.alignment = Alignment(horizontal="center", vertical="top", wrap_text=True)
+                
+                # Uždėdami rėmelius sulietam plotui, openpyxl reikalauja, kad rėmelis būtų visoms ląstelėms
+                for r_idx in range(6, 9):
+                    ws_konc.cell(row=r_idx, column=3).border = thin_border
+                    
+    # --- LAPAS "SVĖRIMAS" ---
     if "Svėrimas" in wb.sheetnames:
         ws_sverimas = wb["Svėrimas"]
         
-        # Apibrėžiame duomenis konkretiems stulpeliams
-        sverimo_duomenys = {
-            "A": duomenys['reg_nr'],
-            "B": duomenys['objektas']
-        }
-        
-        for col_let, reiksme in sverimo_duomenys.items():
-            # 1. Įrašome reikšmę į 6-ąją eilutę
-            cell = ws_sverimas[f"{col_let}6"]
-            cell.value = reiksme
-            
-            # 2. Uždedame rėmelius visam rėžiui nuo 6 iki 16 eilutės [cite: 2026-03-03]
-            for r_idx in range(6, 17):
-                ws_sverimas[f"{col_let}{r_idx}"].border = thin_border
-            
-            # 3. Suliejame langelius (nuo 6 iki 16 eilutės yra 11 eilučių)
-            ws_sverimas.merge_cells(f"{col_let}6:{col_let}16")
-            
-            # 4. Centruojame
-            cell.alignment = centravimas
+        # 1. Paruošiame duomenis abiem stulpeliams
+        sverimo_duomenys = {"A": duomenys['reg_nr'], "B": duomenys['objektas']}
+        s_row, e_row = 6, 16 # Duomenų rėžis nuo 6 iki 16 eilutės
 
-    # Išsaugome Rezultatai.xlsx failą
+        for col_let, reiksme in sverimo_duomenys.items():
+            col_idx = 1 if col_let == "A" else 2
+            
+            # Įrašome reikšmę į viršutinį langelį
+            ws_sverimas[f"{col_let}6"].value = reiksme
+            
+            # Panaikiname senus suliejimus, kad perrašytume švariai [cite: 2026-03-03]
+            for range_ in list(ws_sverimas.merged_cells.ranges):
+                if f"{col_let}6" in range_:
+                    ws_sverimas.unmerge_cells(str(range_))
+
+            if col_let == "A":
+                # --- A STULPELIS: BE SULIEJIMO, TIK IŠORINIS RĖMAS ---
+                for r_idx in range(s_row, e_row + 1):
+                    cell = ws_sverimas.cell(row=r_idx, column=col_idx)
+                    cell.alignment = Alignment(horizontal="center", vertical="top", wrap_text=True)
+                    # Rėmelis tik bloko išorei
+                    cell.border = Border(
+                        left=side_thin, 
+                        right=side_thin, 
+                        top=side_thin if r_idx == s_row else None, 
+                        bottom=side_thin if r_idx == e_row else None
+                    )
+            else:
+                # --- B STULPELIS: SULIETAS, LYGIAVIMAS VIRŠUJE ---
+                # Suliejame B6:B16
+                ws_sverimas.merge_cells(start_row=s_row, start_column=col_idx, end_row=e_row, end_column=col_idx)
+                
+                # Nustatome stilių visoms ląstelėms bloke (dėl rėmelių ir lygiavimo) [cite: 2026-03-03]
+                for r_idx in range(s_row, e_row + 1):
+                    cell = ws_sverimas.cell(row=r_idx, column=col_idx)
+                    cell.alignment = Alignment(horizontal="center", vertical="top", wrap_text=True)
+                    cell.border = thin_border # B stulpeliui paliekame pilną rėmą aplink sulietą plotą
+
     wb.save(failo_rezultatai)
