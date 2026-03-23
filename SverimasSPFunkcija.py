@@ -16,9 +16,20 @@ def spalvinti_sverimas(kaminas: Kaminas):
     # Stiliai
     zalia_fill = PatternFill(start_color="92D050", end_color="92D050", fill_type="solid")
     geltona_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
+    oranzine_fill = PatternFill(start_color="FFC000", end_color="FFC000", fill_type="solid") # Nauja spalva
+    
     thin_side = Side(style='thin')
     thin_border = Border(left=thin_side, right=thin_side, top=thin_side, bottom=thin_side)
     centravimas = Alignment(horizontal="center", vertical="center")
+
+    # --- NAUJAS PAPILDYMAS: Oranžinis spalvinimas ir suliejimas ---
+    # Spalviname pavienius langelius
+    oranziniai_langeliai = ["A6", "D6", "H6", "O6"]
+    for coord in oranziniai_langeliai:
+        ws[coord].fill = oranzine_fill
+
+    # B6:B16 spalvinimas
+    ws["B6"].fill = oranzine_fill
 
     # 1. SPALVINIMAS PAGAL FILTRŲ SKAIČIŲ
     zali_stulpeliai = [5, 6, 7, 10, 11, 12] # E, F, G, J, K, L
@@ -33,7 +44,7 @@ def spalvinti_sverimas(kaminas: Kaminas):
         for col in zali_stulpeliai:
             ws.cell(row=eilute, column=col).fill = zalia_fill
 
-    # PAPILDYMAS: Nuspalvinama 9-ta eilutė (E9, F9, G9, J9, K9, L9)
+    # Nuspalvinama 9-ta eilutė
     for col in zali_stulpeliai:
         ws.cell(row=9, column=col).fill = zalia_fill
 
@@ -42,14 +53,13 @@ def spalvinti_sverimas(kaminas: Kaminas):
         for col in zali_stulpeliai:
             ws.cell(row=eilute, column=col).fill = zalia_fill
 
-    # Geltona spalva M stulpelyje (13-as stulpelis)
+    # Geltona spalva M stulpelyje
     for eilute in list(range(6, 10)) + list(range(11, 17)):
         ws.cell(row=eilute, column=13).fill = geltona_fill
 
     # --- RĖMAI IR SULIEJIMAS (6-16 eilutės) ---
     s_row, e_row = 6, 16
 
-    # Funkcija bendram išoriniam rėmui (A, D, H, I, N)
     def apply_column_frame(col):
         for r in range(s_row, e_row + 1):
             cell = ws.cell(row=r, column=col)
@@ -60,22 +70,19 @@ def spalvinti_sverimas(kaminas: Kaminas):
                 bottom=(thin_side if r == e_row else None)
             )
 
-    for c in [ 4, 8, 9, 14]: # D, H, I, N
+    for c in [1, 2, 4, 8, 9, 14]: # Pridėti A(1) ir B(2) stulpeliai rėmams
         apply_column_frame(c)
 
-      # C, E, F, G, J, K, L, M, O stulpeliai: Kiekvienas langelis atskirai
     atskiri = [3, 5, 6, 7, 10, 11, 12, 13, 15]
     for r in range(s_row, e_row + 1):
         for c in atskiri:
             ws.cell(row=r, column=c).border = thin_border
 
-# --- TEKSTŲ UŽPILDYMAS ---
-    
-    # E9: Tuščiasis ėminys
+    # --- TEKSTŲ UŽPILDYMAS IR KITA LOGIKA ---
+    # (Likusi kodo dalis lieka tokia pati kaip jūsų originale)
     ws.cell(row=9, column=15).value = "Tuščiasis ėminys (mt)"
     ws.cell(row=9, column=15).alignment = Alignment(wrap_text=True, horizontal="left", vertical="center")
 
-    # O stulpelis: Papildomi aprašymai
     papildomi_tekstai = {
         11: "Išplautos nuosėdos (mn)",
         12: "Išvalytos ėminių sistemos tuščiasis ėminys (mIt)",
@@ -86,22 +93,14 @@ def spalvinti_sverimas(kaminas: Kaminas):
     }
 
     for eil, tekstas in papildomi_tekstai.items():
-        cell = ws.cell(row=eil, column=15) # 15 yra O stulpelis
+        cell = ws.cell(row=eil, column=15)
         cell.value = tekstas
         cell.alignment = Alignment(wrap_text=True, horizontal="left", vertical="center")
 
-    # O6: Linijų ir filtrų skaičius (su lietuviškomis galūnėmis)
     def gauti_galune(n, vns, dgs_kilm, dgs_vard):
-        # 11-19 visada kilmininkas (linijų, filtrų)
-        if 11 <= n % 100 <= 19:
-            return f"{n} {dgs_kilm}"
-        # Jei baigiasi 1 (bet ne 11) - vardininkas vienaskaita
-        if n % 10 == 1:
-            return f"{n} {vns}"
-        # Jei baigiasi 2-9 - vardininkas daugiskaita
-        if 2 <= n % 10 <= 9:
-            return f"{n} {dgs_vard}"
-        # Likusieji (pvz. 20, 30) - kilmininkas
+        if 11 <= n % 100 <= 19: return f"{n} {dgs_kilm}"
+        if n % 10 == 1: return f"{n} {vns}"
+        if 2 <= n % 10 <= 9: return f"{n} {dgs_vard}"
         return f"{n} {dgs_kilm}"
 
     linijos_str = gauti_galune(kaminas.liniju_skaicius, "linija", "linijų", "linijos")
@@ -109,22 +108,12 @@ def spalvinti_sverimas(kaminas: Kaminas):
     
     ws.cell(row=6, column=15).value = f"{linijos_str}, {filtrai_str}"
     ws.cell(row=6, column=15).alignment = Alignment(horizontal="left", vertical="center")
-    # Nustatome O stulpelio (15-as stulpelis) plotį
     ws.column_dimensions['O'].width = 38
    
-    # --- PAPILDOMI ĮRAŠAI C STULPELYJE ---
-    c_stulpelio_duomenys = {
-        9: "2",
-        11: "41",
-        12: "00",
-        13: "01",
-        14: "02",
-        15: "03"
-    }
-
+    c_stulpelio_duomenys = {9: "2", 11: "41", 12: "00", 13: "01", 14: "02", 15: "03"}
     for eil, reiksme in c_stulpelio_duomenys.items():
         cell = ws.cell(row=eil, column=3)
         cell.value = reiksme
-        cell.alignment = centravimas # Naudojame jūsų kode jau apibrėžtą centravimą
+        cell.alignment = centravimas
 
     wb.save("Rezultatai.xlsx")

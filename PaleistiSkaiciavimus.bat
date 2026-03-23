@@ -2,7 +2,15 @@
 chcp 65001 > nul
 setlocal
 
-:: Kelias iki šio aplanko
+:: Tikriname, ar jau paleista maksimizuotame lange
+if "%1" == "maximized" goto START_PROCESAS
+
+:: Paleidžiame iš naujo maksimizuotai
+start /max "" "%~f0" maximized
+exit /b
+
+:START_PROCESAS
+:: Kelias iki šio aplanko (naudojame kabutes dėl tarpų kelyje)
 cd /d "%~dp0"
 
 :: 1. Tikriname, ar aplinka išvis egzistuoja

@@ -10,6 +10,9 @@ from Pradiniai2Funkcija import nuskaityti_ir_perkelti_Greitis, perkelti_greitis_
 from Pradiniai3Funkcija import nuskaityti_ir_perkelti_Paemimas, perkelti_paemimas_duomenis 
 from Pradiniai4Funkcija import sukurti_Paemimas_komplektus, perkelti_paemimas_komplektus
 from GreitisSPFunkcija import spalvinti_greitis
+from H2OSPFunkcija import spalvinti_H2O
+from PaemimasSP1Funkcija import spalvinti_paemimas1
+from AerodinamikaSP1Funkcija import spalvinti_aerodinamika1
 from KoncentracijaSPFunkcija import spalvinti_koncentracija
 from SverimasSPFunkcija import spalvinti_sverimas
 
@@ -77,6 +80,9 @@ def pagrindine_programa():
     print("\nTęsiama programa: spalvinami lapai ir baigiami skaičiavimai...")
 
     spalvinti_greitis(Kaminas)
+    spalvinti_H2O()
+    spalvinti_paemimas1(Kaminas)
+    spalvinti_aerodinamika1(Kaminas)
     spalvinti_koncentracija(Kaminas)
     spalvinti_sverimas(Kaminas)
     print("\n=== PROGRAMOS PABAIGA (Patikrinkite Rezultatai.xlsx) ===")
