@@ -110,38 +110,53 @@ def nuskaityti_ir_perkelti_duomenis(kaminas_obj):
             cell.alignment = top_alignment
 
     # --- LAPAI "PAĖMIMAS" IR "AERODINAMIKA" ---
-    lapiu_sarasas = ["Paėmimas", "Aerodinamika"] # Apibrėžiame čia, kad nekiltų "not defined" klaida
-    tasku_sk = kaminas_obj.tasku_skaicius
+    # --- BENDRI DUOMENYS (Apibrėžiame čia, kad matytų visi lapai) ---
     perkeliami_duomenys = {"A": duomenys['data'], "B": duomenys['reg_nr'], "C": duomenys['objektas']}
+    tasku_sk = kaminas_obj.tasku_skaicius
+    tarpas = 4 # 4 tuščios eilutės tarp lentelių
+
+    # --- LAPAI "PAĖMIMAS" IR "AERODINAMIKA" ---
+    lapiu_sarasas = ["Paėmimas", "Aerodinamika"]
 
     for pavadinimas in lapiu_sarasas:
         if pavadinimas in wb.sheetnames:
             ws_temp = wb[pavadinimas]
-            pabaigos_eilute = 6 + (tasku_sk - 1 if tasku_sk > 1 else 0)
-            
-            for col_let, reiksme in perkeliami_duomenys.items():
-                col_idx = list(perkeliami_duomenys.keys()).index(col_let) + 1
-                cell = ws_temp[f"{col_let}6"]
-                cell.value = reiksme
-                cell.alignment = top_alignment
+            dabartine_eilute = 6 # Pirma lentelė prasideda 6-oje eilutėje
 
-                if col_let in ["A", "B"]:
-                    # NESULIEJAME. Tik išorinis rėmas visam stulpelio blokui [cite: 2026-03-03]
-                    for r in range(6, pabaigos_eilute + 1):
-                        current_cell = ws_temp.cell(row=r, column=col_idx)
-                        # Kraštinės: kairė/dešinė visada, viršus tik 6 eilutei, apačia tik paskutinei
-                        current_cell.border = Border(
-                            left=side_thin, 
-                            right=side_thin, 
-                            top=side_thin if r == 6 else None, 
-                            bottom=side_thin if r == pabaigos_eilute else None
-                        )
-                else:
-                    # C stulpelis: lieka sulietas su pilnu rėmu [cite: 2026-03-03]
-                    for r in range(6, pabaigos_eilute + 1):
-                        ws_temp.cell(row=r, column=col_idx).border = thin_border
-                    if tasku_sk > 1:
-                        ws_temp.merge_cells(f"{col_let}6:{col_let}{pabaigos_eilute}")
+            # Sukame ciklus per filtrus ir linijas (iš MatavimoVieta.py)
+            for f in range(kaminas_obj.filtru_skaicius):
+                for l in range(kaminas_obj.liniju_skaicius):
+                    pabaigos_eilute = dabartine_eilute + tasku_sk - 1
+                    
+                    for col_let, reiksme in perkeliami_duomenys.items():
+                        col_idx = 1 if col_let == "A" else (2 if col_let == "B" else 3)
+                        
+                        # Įrašome reikšmę į viršutinį lentelės langelį
+                        cell = ws_temp.cell(row=dabartine_eilute, column=col_idx)
+                        cell.value = reiksme
+                        cell.alignment = top_alignment
+
+                        if col_let in ["A", "B"]:
+                            # A ir B: Tik išorinis rėmas visam stulpelio blokui
+                            for r in range(dabartine_eilute, pabaigos_eilute + 1):
+                                current_cell = ws_temp.cell(row=r, column=col_idx)
+                                current_cell.border = Border(
+                                    left=side_thin, 
+                                    right=side_thin, 
+                                    top=side_thin if r == dabartine_eilute else None, 
+                                    bottom=side_thin if r == pabaigos_eilute else None
+                                )
+                        else:
+                            # C stulpelis: Suliejame ir uždedame pilną rėmą
+                            for r in range(dabartine_eilute, pabaigos_eilute + 1):
+                                ws_temp.cell(row=r, column=col_idx).border = thin_border
+                            
+                            if tasku_sk > 1:
+                                ws_temp.merge_cells(start_row=dabartine_eilute, start_column=col_idx, 
+                                                    end_row=pabaigos_eilute, end_column=col_idx)
+
+                    # Perskaičiuojame poziciją kitai lentelei (taškai + 2 papildomos eilutės + tarpas)
+                    dabartine_eilute += tasku_sk + tarpas
 
     # --- LAPAS "KONCENTRACIJA" ---
     if "Koncentracija" in wb.sheetnames:
