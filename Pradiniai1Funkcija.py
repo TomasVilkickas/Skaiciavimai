@@ -27,7 +27,7 @@ def sukurti_sablona(kaminas_obj):
     
     # 2. Įrašome į Excel naudojant pandas ir openpyxl [cite: 2026-03-03]
     with pd.ExcelWriter(failo_pavadinimas, engine='openpyxl') as writer:
-        for pav in ["Pradiniai", "Greitis", "Paėmimas"]:
+        for pav in ["Pradiniai", "Greitis", "H2O", "Paėmimas"]:
             if pav == lapas_pavadinimas:
                 # Pradedame nuo 5-os eilutės (startrow=4)
                 df_template.to_excel(writer, sheet_name=pav, startrow=4, index=False)

@@ -6,9 +6,12 @@ from AtstumaiFunkcija import vykdyti_atstumai
 from Pavadinimai1Funkcija import irasyti_antrastes
 from Pavadinimai2Funkcija import irasyti_antrastes2
 from Pradiniai1Funkcija import sukurti_sablona, nuskaityti_ir_perkelti_duomenis
-from Pradiniai2Funkcija import nuskaityti_ir_perkelti_Greitis, perkelti_greitis_duomenis
+from Pradiniai2Funkcija import nuskaityti_ir_perkelti_Greitis, paruosti_H2O_lapa, perkelti_greitis_duomenis, perkelti_H2O_duomenis
 from Pradiniai3Funkcija import nuskaityti_ir_perkelti_Paemimas, perkelti_paemimas_duomenis 
 from Pradiniai4Funkcija import sukurti_Paemimas_komplektus, perkelti_paemimas_komplektus
+from GreitisSK1Funkcija import skaiciuoti_greitis1
+from PaemimasSK1Funkcija import skaiciuoti_paemimas1
+from AerodinamikaSK1Funkcija import skaiciuoti_aerodinamika1
 from GreitisSPFunkcija import spalvinti_greitis
 from H2OSPFunkcija import spalvinti_H2O
 from PaemimasSP1Funkcija import spalvinti_paemimas1
@@ -57,6 +60,7 @@ def pagrindine_programa():
     # Sukuriame šabloną (jei reikia, su patikra, kad neperrašytų esamo)
     sukurti_sablona(Kaminas)
     nuskaityti_ir_perkelti_Greitis(Kaminas)
+    paruosti_H2O_lapa()
     nuskaityti_ir_perkelti_Paemimas(Kaminas)
     sukurti_Paemimas_komplektus(Kaminas)
     zodynas = sukurti_Paemimas_komplektus(Kaminas)
@@ -73,12 +77,16 @@ def pagrindine_programa():
     input("\nKai užbaigsite pildyti 'Pradiniai.xlsx', paspauskite ENTER čia...")
     nuskaityti_ir_perkelti_duomenis(Kaminas)
     perkelti_greitis_duomenis(Kaminas)
+    perkelti_H2O_duomenis()
     perkelti_paemimas_duomenis(Kaminas)
     perkelti_paemimas_komplektus(Kaminas, zodynas)
 
     # 3. TĘSIAME TOLIAU (Spalvinimas ir kiti skaičiavimai)
     print("\nTęsiama programa: spalvinami lapai ir baigiami skaičiavimai...")
 
+    skaiciuoti_greitis1(Kaminas)
+    skaiciuoti_paemimas1(Kaminas)
+    skaiciuoti_aerodinamika1(Kaminas)
     spalvinti_greitis(Kaminas)
     spalvinti_H2O()
     spalvinti_paemimas1(Kaminas)

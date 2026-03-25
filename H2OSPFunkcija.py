@@ -49,9 +49,11 @@ def spalvinti_H2O():
     for col_idx, settings in stulpeliu_nustatymai.items():
         cell = ws.cell(row=7, column=col_idx)
         cell.border = border
-        cell.font = bold_font
         cell.alignment = centravimas
         
+        # Pataisymas: Bold tik A stulpeliui (indeksas 1), kitiems - ne.
+        cell.font = Font(bold=(col_idx == 1))
+
         # Įrašome tekstą A stulpelyje
         if "text" in settings:
             cell.value = settings["text"]

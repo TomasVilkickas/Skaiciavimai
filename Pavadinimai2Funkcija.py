@@ -126,6 +126,44 @@ def irasyti_antrastes2(kaminas_obj):
     area_cell.alignment = center_wrap
     area_cell.border = Border() # Nuimame rėmelius, jei jie buvo
 
+    # --- DINAMINIS REIKŠMIŲ GENERAVIMAS ---
+    # Naudojame reikšmes tiesiai iš kaminas_obj (įsitikinkite, kad šie kintamieji ten apibrėžti)
+    n_taskai = int(kaminas_obj.tasku_skaicius) 
+    n_linijos = int(kaminas_obj.liniju_skaicius)
+    n_filtrai = int(kaminas_obj.filtru_skaicius)
+    
+    # Skaičiuojame žingsnį: taškų skaičius + 4 tuščios eilutės
+    zingsnis = n_taskai + 4
+    # Bendras blokų kiekis: linijos padaugintos iš filtrų
+    viso_bloku = n_linijos * n_filtrai
+    
+    pradine_eilute = 6
+
+    for i in range(viso_bloku):
+        eilute = pradine_eilute + (i * zingsnis)
+        
+        # 1. Ortakio matmenys / skersmuo (D stulpelis)
+        d_cell = ws_paemimas.cell(row=eilute, column=4)
+        d_cell.value = ortakio_reiksme
+        d_cell.alignment = center_wrap
+        d_cell.border = Border() # Jei reikia be rėmelių, kaip buvo jūsų kode
+
+        # 2. Skerspjūvio ploto formulė (E stulpelis)
+        e_cell = ws_paemimas.cell(row=eilute, column=5)
+        
+        if target_row and target_col:
+            # Išlaikome jūsų logiką dėl A arba S formos poslinkio 'Greitis' lape
+            row_offset = 1 if kaminas_obj.forma == "A" else 2
+            source_cell_address = f"{get_column_letter(target_col)}{target_row + row_offset}"
+            e_cell.value = f"='Greitis'!{source_cell_address}"
+        else:
+            e_cell.value = "Nerasta 'Greitis' lape"
+
+        # Formatuojame ploto langelį
+        e_cell.number_format = '0.0000'
+        e_cell.alignment = center_wrap
+        e_cell.border = Border()
+    
     # --- 3. Lapas "Aerodinamika" ---
     ws_aero = wb.create_sheet("Aerodinamika") if "Aerodinamika" not in wb.sheetnames else wb["Aerodinamika"]
     aero_headers = ["Matavimo data", "Ėminių registracijos Nr. T-107-2026-E-", "Objekto pavadinimas, adresas, taršos šaltinio Nr.", "Prasiurbtas dujų tūris Vm (m3)", "Prasiurbtas dujų tūris normaliosiomis sąlygomis Vmn (Nm3)", "Prasiurbto dujų tūrio normaliosiomis sąlygomis suma Vmn(sum) (Nm3)", "Sausų dujų tankis normaliosioms sąlygomis qn (kg/m3)", "Drėgmės kiekis X (%)", "Pratrauktas drėgnų dujų tūris realiomis sąlygomis Vmk (m3)", "Dujų srauto greitis antgalyje v antg. (m/s)", "Izokinetiškumas (0,95-1,15)", "Izokinetiškumo vidurkis (0,95-1,15)", "Skaičiavimus atlikusio asmens inicialai, data", "Pastabos"]

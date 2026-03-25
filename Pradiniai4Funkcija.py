@@ -65,6 +65,7 @@ def sukurti_Paemimas_komplektus(kaminas_obj):
                 cell = ws.cell(row=dabartine_eilute + 2, column=linijos_pradinis_stulpelis + col_offset, value=pavadinimas)
                 cell.alignment = center_align
                 cell.border = thin_border
+                cell.font = bold_font
 
             # ČIA BUVO KLAIDA: Sukuriamas sąrašas linijos taškams saugoti
             linijos_tasku_adresai = []

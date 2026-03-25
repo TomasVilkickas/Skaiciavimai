@@ -77,6 +77,54 @@ def nuskaityti_ir_perkelti_Greitis(kaminas_obj):
         main_cell.alignment = alignment
         main_cell.number_format = info["format"]
 
+        wb.save(failo_pavadinimas)
+
+def paruosti_H2O_lapa():
+    """Sukuriamas ir suformatuojamas H2O lapas faile Pradiniai.xlsx"""
+    failo_pavadinimas = "Pradiniai.xlsx"
+    lapas_pavadinimas = "H2O"
+    
+    try:
+        wb = load_workbook(failo_pavadinimas)
+    except FileNotFoundError:
+        return
+
+    if lapas_pavadinimas not in wb.sheetnames:
+        wb.create_sheet(lapas_pavadinimas)
+    ws = wb[lapas_pavadinimas]
+
+    thin_border = Border(
+        left=Side(style='thin'), right=Side(style='thin'), 
+        top=Side(style='thin'), bottom=Side(style='thin')
+    )
+    alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    bold_font = Font(bold=True)
+
+    antrastes = [
+        (2, "Ėminių ėmimo laikas t, min."),
+        (3, "Paėmimo greitis, l/min"),
+        (4, "Išretėjimas, -hPa"),
+        (5, "Temperatūra prie aspiratoriaus, Vtr oC"),
+        (6, "Vandens kondensato masė m H2O, kg")
+    ]
+
+    for col_idx, pavadinimas in antrastes:
+        cell = ws.cell(row=5, column=col_idx)
+        cell.value = pavadinimas
+        # cell.font = bold_font # Šią eilutę ištriname arba užkomentuojame
+        cell.alignment = alignment
+        cell.border = thin_border
+        ws.column_dimensions[get_column_letter(col_idx)].width = 22
+
+    formatai = {2: "0", 3: "0", 4: "0.0", 5: "0.0", 6: "0.000"}
+
+    for col_idx in range(2, 7):
+        cell = ws.cell(row=6, column=col_idx)
+        cell.border = thin_border
+        cell.alignment = alignment
+        if col_idx in formatai:
+            cell.number_format = formatai[col_idx]
+            
     wb.save(failo_pavadinimas)
 
 def perkelti_greitis_duomenis(kaminas_obj):
@@ -162,3 +210,39 @@ def perkelti_greitis_duomenis(kaminas_obj):
                 cell.alignment = centravimas
 
     wb_rez.save(failas_i)
+
+def perkelti_H2O_duomenis():
+    """Perkelia H2O duomenis iš Pradiniai.xlsx į Rezultatai.xlsx"""
+    failas_is = "Pradiniai.xlsx"
+    failas_i = "Rezultatai.xlsx"
+    lapas = "H2O"
+
+    try:
+        wb_is = load_workbook(failas_is)
+        ws_is = wb_is[lapas]
+        wb_i = load_workbook(failas_i)
+        ws_i = wb_i[lapas]
+    except Exception as e:
+        print(f"Klaida atidarant failus: {e}")
+        return
+
+    alignment = Alignment(horizontal="center", vertical="center")
+
+    # Perkėlimo logika: (Iš_Cell, Į_Cell, Formatas)
+    # B6 -> B7 (sveikas), C6 -> C7 (sveikas), D6 -> E7 (0.0), E6 -> F7 (0.0), F6 -> I7 (0.000)
+    perkelimai = [
+        ("B6", "B7", "0"),
+        ("C6", "C7", "0"),
+        ("D6", "E7", "0.0"),
+        ("E6", "F7", "0.0"),
+        ("F6", "I7", "0.000")
+    ]
+
+    for is_addr, i_addr, fmat in perkelimai:
+        reiksme = ws_is[is_addr].value
+        target_cell = ws_i[i_addr]
+        target_cell.value = reiksme
+        target_cell.alignment = alignment
+        target_cell.number_format = fmat
+
+    wb_i.save(failas_i)
