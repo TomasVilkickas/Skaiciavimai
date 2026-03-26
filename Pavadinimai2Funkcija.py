@@ -139,27 +139,32 @@ def irasyti_antrastes2(kaminas_obj):
     
     pradine_eilute = 6
 
-    for i in range(viso_bloku):
+    for i in range(1, viso_bloku):
         eilute = pradine_eilute + (i * zingsnis)
         
         # 1. Ortakio matmenys / skersmuo (D stulpelis)
         d_cell = ws_paemimas.cell(row=eilute, column=4)
-        d_cell.value = ortakio_reiksme
+        d_cell.value = "=$D$6"
         d_cell.alignment = center_wrap
         d_cell.border = Border() # Jei reikia be rėmelių, kaip buvo jūsų kode
 
-        # 2. Skerspjūvio ploto formulė (E stulpelis)
+       # 2. Skerspjūvio ploto formulė (E stulpelis)
         e_cell = ws_paemimas.cell(row=eilute, column=5)
         
-        if target_row and target_col:
-            # Išlaikome jūsų logiką dėl A arba S formos poslinkio 'Greitis' lape
-            row_offset = 1 if kaminas_obj.forma == "A" else 2
-            source_cell_address = f"{get_column_letter(target_col)}{target_row + row_offset}"
-            e_cell.value = f"='Greitis'!{source_cell_address}"
+        # Tikriname pagal ciklo kintamąjį 'i'
+        if i == 0:
+            # PATS PIRMAS ĮRAŠAS (6 eilutė)
+            if target_row and target_col:
+                row_offset = 1 if kaminas_obj.forma == "A" else 2
+                source_cell_address = f"{get_column_letter(target_col)}{target_row + row_offset}"
+                e_cell.value = f"='Greitis'!{source_cell_address}"
+            else:
+                e_cell.value = "Nerasta 'Greitis' lape"
         else:
-            e_cell.value = "Nerasta 'Greitis' lape"
+            # VISOS KOPIJOS (žiūri į viršuje esantį E6)
+            e_cell.value = "=$E$6"
 
-        # Formatuojame ploto langelį
+        # Formatuojame ploto langelį (galioja visiems)
         e_cell.number_format = '0.0000'
         e_cell.alignment = center_wrap
         e_cell.border = Border()

@@ -1,0 +1,159 @@
+import pandas as pd
+from openpyxl import load_workbook
+from openpyxl.styles import Alignment
+from MatavimoVieta import Kaminas
+
+def skaiciuoti_paemimas1(kaminas_obj):
+    file_path = 'Rezultatai.xlsx'
+    # Lapų pavadinimai
+    sheet_paemimas = 'Paėmimas'
+    sheet_greitis = 'Greitis'
+    
+    wb = load_workbook(file_path)
+    
+    # 1. PARAMETRAI IŠ OBJEKTO
+    n_taskai = kaminas_obj.tasku_skaicius
+    n_linijos = kaminas_obj.liniju_skaicius
+    n_filtrai = kaminas_obj.filtru_skaicius
+    
+    # Tikriname, ar turime duomenų pildymui
+    if n_taskai == 0 or n_linijos == 0 or n_filtrai == 0:
+        print("Klaida: Matavimo taškų, linijų ar filtrų skaičius negali būti 0.")
+        return
+
+    # 2. PAIEŠKA LAPE "GREITIS" (Atmosferinis ir Statinis slėgis)
+    ws_g = wb[sheet_greitis]
+    atmo_ref = None
+    stat_ref = None
+
+    for row in ws_g.iter_rows():
+        for cell in row:
+            if cell.value:
+                val_str = str(cell.value)
+                if "Atmosferinis slėgis" in val_str:
+                    atmo_ref = ws_g.cell(row=cell.row + 1, column=cell.column).coordinate
+                elif "Statinis slėgis ortakyje" in val_str:
+                    stat_ref = ws_g.cell(row=cell.row + 1, column=cell.column).coordinate
+
+    # 3. DALIS: Lapas "Paėmimas" pildymas
+    ws_p = wb[sheet_paemimas]
+    bendras_bloku_skaicius = n_linijos * n_filtrai
+    start_row_p = 6
+    tarpas = 4
+    dabartine_eilute = start_row_p
+    
+    for blokas in range(bendras_bloku_skaicius):
+        for i in range(n_taskai):
+            row_idx = dabartine_eilute + i
+            
+            # --- Temperatūra, T9 ir U9 (Stulpeliai F, P, Q) ---
+            c_f = ws_p.cell(row=row_idx, column=6)  # F
+            c_f.value = f"='{sheet_paemimas}'!$V$9"
+            c_f.number_format = '0.0'
+            c_f.alignment = Alignment(horizontal='center')
+            
+            c_p = ws_p.cell(row=row_idx, column=16) # P
+            c_p.value = f"='{sheet_paemimas}'!$T$9"
+            c_p.number_format = '0.00'
+            c_p.alignment = Alignment(horizontal='center')
+            
+            c_q = ws_p.cell(row=row_idx, column=17) # Q
+            c_q.value = f"='{sheet_paemimas}'!$U$9"
+            c_q.number_format = '0.00'
+            c_q.alignment = Alignment(horizontal='center')
+
+            # --- Slėgių perkėlimas (Stulpeliai H, I) ---
+            cell_h = ws_p.cell(row=row_idx, column=8) # H (Atmosferinis)
+            cell_i = ws_p.cell(row=row_idx, column=9) # I (Statinis)
+
+            if row_idx == start_row_p:
+                # Pati pirma reikšmė (H6/I6) nurodo į Greitis lapą
+                if atmo_ref: cell_h.value = f"='{sheet_greitis}'!{atmo_ref}"
+                if stat_ref: cell_i.value = f"='{sheet_greitis}'!{stat_ref}"
+            else:
+                # Visos kitos nurodo į pirmąjį langelį ($H$6 / $I$6)
+                cell_h.value = f"=$H${start_row_p}"
+                cell_i.value = f"=$I${start_row_p}"
+
+            # Slėgių formatavimas (Sveikas skaičius)
+            cell_h.number_format = '0'
+            cell_i.number_format = '0.00'
+            cell_h.alignment = Alignment(horizontal='center')
+            cell_i.alignment = Alignment(horizontal='center')
+          
+        # --- L, M ir N stulpelių suvedimas po kiekvieno bloko ---
+        sum_row = dabartine_eilute + n_taskai # Eilutė iškart po matavimo taškų
+        
+        # Diapazonas sumavimui/vidurkiui (pvz., L6:L22)
+        range_l = f"L{dabartine_eilute}:L{sum_row - 1}"
+        range_m = f"M{dabartine_eilute}:M{sum_row - 1}"
+        range_n = f"N{dabartine_eilute}:N{sum_row - 1}"
+
+        # 1. L stulpelis: SUMA, 3 skaičiai po kablelio
+        cell_l_sum = ws_p.cell(row=sum_row, column=12) # 12 = L
+        cell_l_sum.value = f"=SUM({range_l})"
+        cell_l_sum.number_format = '0.000'
+        cell_l_sum.alignment = Alignment(horizontal='center')
+
+        # 2. M stulpelis: SUMA, sveikasis skaičius
+        cell_m_sum = ws_p.cell(row=sum_row, column=13) # 13 = M
+        cell_m_sum.value = f"=SUM({range_m})"
+        cell_m_sum.number_format = '0'
+        cell_m_sum.alignment = Alignment(horizontal='center')
+
+        # 3. N stulpelis: VIDURKIS, sveikasis skaičius
+        cell_n_avg = ws_p.cell(row=sum_row, column=14) # 14 = N
+        cell_n_avg.value = f"=AVERAGE({range_n})"
+        cell_n_avg.number_format = '0'
+        cell_n_avg.alignment = Alignment(horizontal='center')
+        
+        # Peršokame bloką ir pridedame tarpą
+        dabartine_eilute += n_taskai + tarpas
+
+    # Nustatome eilutę galutiniams rezultatams (praleidžiame 3 eilutes po paskutinio bloko)
+    # Atimame tarpą, nes ciklo gale jis pridedamas pertekliškai
+    galutine_eilute = dabartine_eilute - tarpas + 3
+
+    # Sukuriame sąrašus langelių, kuriuos reikės sumuoti/vidurkinti
+    m_langeliai = []
+    n_langeliai = []
+    
+    tarpine_eilute = start_row_p + n_taskai
+    for _ in range(bendras_bloku_skaicius):
+        m_langeliai.append(f"M{tarpine_eilute}")
+        n_langeliai.append(f"N{tarpine_eilute}")
+        tarpine_eilute += n_taskai + tarpas
+
+    # 1. Galutinė M stulpelio suma
+    cell_m_total = ws_p.cell(row=galutine_eilute, column=13) # M
+    cell_m_total.value = f"=SUM({','.join(m_langeliai)})"
+    cell_m_total.number_format = '0'
+    cell_m_total.alignment = Alignment(horizontal='center', vertical='center')
+
+    # 2. Galutinis N stulpelio vidurkių vidurkis
+    cell_n_total_avg = ws_p.cell(row=galutine_eilute, column=14) # N
+    cell_n_total_avg.value = f"=AVERAGE({','.join(n_langeliai)})"
+    cell_n_total_avg.number_format = '0'
+    cell_n_total_avg.alignment = Alignment(horizontal='center', vertical='center')
+
+    # 4. DALIS: Lapas "Greitis" (Temperatūros įrašymas po paieškos)
+    target_row = None
+    target_col = None
+    for row in ws_g.iter_rows():
+        for cell in row:
+            if cell.value and "Temperatūra ortakyje" in str(cell.value):
+                target_row = cell.row
+                target_col = cell.column
+                break
+        if target_row: break
+
+    if target_row and target_col:
+        for i in range(n_taskai):
+            current_g_row = target_row + 1 + i
+            cell_g = ws_g.cell(row=current_g_row, column=target_col)
+            cell_g.value = f"='{sheet_paemimas}'!$V$9"
+            cell_g.number_format = '0.0'
+            cell_g.alignment = Alignment(horizontal='center')
+        print(f"Lape '{sheet_greitis}' temperatūra užpildyta.")
+
+    wb.save(file_path)

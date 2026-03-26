@@ -19,7 +19,8 @@ def sukurti_sablona(kaminas_obj):
     stulpeliai = [
         "Matavimo data", 
         "Ėminių registracijos Nr. T-107-2026-E-", 
-        "Objekto pavadinimas, adresas, taršos šaltinio Nr."
+        "Objekto pavadinimas, adresas, taršos šaltinio Nr.",
+        "Darbuotojo inicialai"
     ]
     
     # Sukuriame tuščią DataFrame su šiais stulpeliais
@@ -48,13 +49,14 @@ def sukurti_sablona(kaminas_obj):
         ws.column_dimensions['A'].width = 25
         ws.column_dimensions['B'].width = 40
         ws.column_dimensions['C'].width = 60
-        
+        ws.column_dimensions['D'].width = 20
+
         # Eilučių aukščiai
         ws.row_dimensions[5].height = 40 # Antraštė
         ws.row_dimensions[6].height = 50 # Vieta įvedimui
         
-        # Pritaikome stilius A, B ir C stulpeliams
-        for col_num in range(1, 4):
+        # Pritaikome stilius A, B, C ir D stulpeliams
+        for col_num in range(1, 5):
             # Antraštės (5 eilutė)
             cell_header = ws.cell(row=5, column=col_num)
             cell_header.alignment = alignment

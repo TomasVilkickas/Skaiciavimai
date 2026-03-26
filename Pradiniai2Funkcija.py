@@ -111,7 +111,7 @@ def paruosti_H2O_lapa():
     for col_idx, pavadinimas in antrastes:
         cell = ws.cell(row=5, column=col_idx)
         cell.value = pavadinimas
-        # cell.font = bold_font # Šią eilutę ištriname arba užkomentuojame
+        cell.font = bold_font
         cell.alignment = alignment
         cell.border = thin_border
         ws.column_dimensions[get_column_letter(col_idx)].width = 22
