@@ -93,7 +93,11 @@ def nuskaityti_ir_perkelti_duomenis(kaminas_obj):
         'reg_nr': df.iloc[0, 1],
         'objektas': df.iloc[0, 2]
     }
-
+    
+    # Suformuojame kombinaciją: Inicialai, Data
+    inicialai = df.iloc[0, 3] if len(df.columns) > 3 else ""
+    kombinacija = f"{inicialai}, {tikra_data}"
+    
     # 2. ĮRAŠYMAS naudojant openpyxl [cite: 2026-03-03]
     wb = load_workbook(failo_rezultatai)
     
@@ -103,13 +107,38 @@ def nuskaityti_ir_perkelti_duomenis(kaminas_obj):
     # Naujas lygiavimas: Horizontaliai centras, Vertikaliai viršus (top)
     top_alignment = Alignment(horizontal="center", vertical="top", wrap_text=True)
 
-    # --- LAPAS "GREITIS" ---
+        # --- LAPAS "GREITIS" ---
     if "Greitis" in wb.sheetnames:
         ws_greitis = wb["Greitis"]
+        
+        # 1. Pagrindinių duomenų įrašymas (A6, B6, C6)
         for col_let, reiksme in {"A": duomenys['data'], "B": duomenys['reg_nr'], "C": duomenys['objektas']}.items():
             cell = ws_greitis[f"{col_let}6"]
             cell.value = reiksme
             cell.alignment = top_alignment
+
+        # 2. Paieška pagal dalinę frazę
+        target_cell = None
+        ieskoma_fraze = "Skaičiavimus atliko" # Ieškome šios dalies pradžioje
+        
+        for row in ws_greitis.iter_rows():
+            for cell in row:
+                # Patikriname, ar langelyje yra tekstas ir ar jame yra mūsų frazė
+                if cell.value and ieskoma_fraze in str(cell.value):
+                    target_cell = cell
+                    break
+            if target_cell: break
+
+        # 3. Rezultato įrašymas
+        if target_cell:
+            # Įrašome į langelį tiesiai po rastu tekstu
+            res_cell = ws_greitis.cell(row=target_cell.row + 1, column=target_cell.column)
+            res_cell.value = kombinacija
+            res_cell.alignment = Alignment(horizontal="center", vertical="center")
+            # Uždėkite rėmelį, jei reikia
+            res_cell.border = thin_border 
+        else:
+            print(f"Įspėjimas: Langelis su '{ieskoma_fraze}' nerastas.")
 
     # --- LAPAI "PAĖMIMAS" IR "AERODINAMIKA" ---
     # --- BENDRI DUOMENYS (Apibrėžiame čia, kad matytų visi lapai) ---
@@ -117,6 +146,9 @@ def nuskaityti_ir_perkelti_duomenis(kaminas_obj):
     tasku_sk = kaminas_obj.tasku_skaicius
     tarpas = 4 # 4 tuščios eilutės tarp lentelių
 
+    # Apibrėžiame, kuriame stulpelyje rašysime kombinaciją kiekviename lape
+    parasas_stulpeliai = {"Paėmimas": "R", "Aerodinamika": "M"}
+    
     # --- LAPAI "PAĖMIMAS" IR "AERODINAMIKA" ---
     lapiu_sarasas = ["Paėmimas", "Aerodinamika"]
 
@@ -124,6 +156,8 @@ def nuskaityti_ir_perkelti_duomenis(kaminas_obj):
         if pavadinimas in wb.sheetnames:
             ws_temp = wb[pavadinimas]
             dabartine_eilute = 6 # Pirma lentelė prasideda 6-oje eilutėje
+            # Gauname stulpelio raidę šiam lapui (R arba M)
+            col_parasas = parasas_stulpeliai.get(pavadinimas)
 
             # Sukame ciklus per filtrus ir linijas (iš MatavimoVieta.py)
             for f in range(kaminas_obj.filtru_skaicius):
@@ -157,6 +191,13 @@ def nuskaityti_ir_perkelti_duomenis(kaminas_obj):
                                 ws_temp.merge_cells(start_row=dabartine_eilute, start_column=col_idx, 
                                                     end_row=pabaigos_eilute, end_column=col_idx)
 
+                    if col_parasas:
+                        cell_p = ws_temp[f"{col_parasas}{dabartine_eilute}"]
+                        cell_p.value = kombinacija
+                        cell_p.alignment = Alignment(horizontal="center", vertical="center")
+                        # Jei reikia, pridedame rėmelį (priklauso nuo jūsų formos dizaino)
+                        cell_p.border = thin_border
+                    
                     # Perskaičiuojame poziciją kitai lentelei (taškai + 2 papildomos eilutės + tarpas)
                     dabartine_eilute += tasku_sk + tarpas
 
@@ -204,6 +245,9 @@ def nuskaityti_ir_perkelti_duomenis(kaminas_obj):
                 # Uždėdami rėmelius sulietam plotui, openpyxl reikalauja, kad rėmelis būtų visoms ląstelėms
                 for r_idx in range(6, 9):
                     ws_konc.cell(row=r_idx, column=3).border = thin_border
+    
+    ws_konc["N6"] = kombinacija
+    ws_konc["N6"].alignment = Alignment(horizontal="center", vertical="center")
                     
     # --- LAPAS "SVĖRIMAS" ---
     if "Svėrimas" in wb.sheetnames:
@@ -247,4 +291,7 @@ def nuskaityti_ir_perkelti_duomenis(kaminas_obj):
                     cell.alignment = Alignment(horizontal="center", vertical="top", wrap_text=True)
                     cell.border = thin_border # B stulpeliui paliekame pilną rėmą aplink sulietą plotą
 
+                ws_sverimas["H6"] = kombinacija
+                ws_sverimas["H6"].alignment = Alignment(horizontal="center", vertical="center")
+    
     wb.save(failo_rezultatai)
