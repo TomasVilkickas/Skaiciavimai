@@ -166,6 +166,5 @@ def skaiciuoti_paemimas1(kaminas_obj):
             cell_g.value = f"='{sheet_paemimas}'!$V$9"
             cell_g.number_format = '0.0'
             cell_g.alignment = Alignment(horizontal='center')
-        print(f"Lape '{sheet_greitis}' temperatūra užpildyta.")
 
     wb.save(file_path)
