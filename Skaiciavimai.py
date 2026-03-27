@@ -9,11 +9,13 @@ from Pradiniai1Funkcija import sukurti_sablona, nuskaityti_ir_perkelti_duomenis
 from Pradiniai2Funkcija import nuskaityti_ir_perkelti_Greitis, paruosti_H2O_lapa, perkelti_greitis_duomenis, perkelti_H2O_duomenis
 from Pradiniai3Funkcija import nuskaityti_ir_perkelti_Paemimas, perkelti_paemimas_duomenis 
 from Pradiniai4Funkcija import sukurti_Paemimas_komplektus, perkelti_paemimas_komplektus
-from GreitisSK1Funkcija import skaiciuoti_greitis1
 from H2OSK1Funkcija import skaiciuoti_H2O1
 from PaemimasSK1Funkcija import skaiciuoti_paemimas1
 from AerodinamikaSK1Funkcija import skaiciuoti_aerodinamika1
 from H2OSK2Funkcija import skaiciuoti_H2O2
+from H2OSK3Funkcija import skaiciuoti_H2O3
+from AerodinamikaSK2Funkcija import skaiciuoti_aerodinamika2
+from GreitisSK1Funkcija import skaiciuoti_greitis1
 from GreitisSPFunkcija import spalvinti_greitis
 from H2OSPFunkcija import spalvinti_H2O
 from PaemimasSP1Funkcija import spalvinti_paemimas1
@@ -86,11 +88,13 @@ def pagrindine_programa():
     # 3. TĘSIAME TOLIAU (Spalvinimas ir kiti skaičiavimai)
     print("\nTęsiama programa: spalvinami lapai ir baigiami skaičiavimai...")
 
-    skaiciuoti_greitis1(Kaminas)
     skaiciuoti_H2O1()
     skaiciuoti_paemimas1(Kaminas)
     skaiciuoti_aerodinamika1(Kaminas)
     skaiciuoti_H2O2(Kaminas)
+    skaiciuoti_H2O3(Kaminas)
+    skaiciuoti_aerodinamika2(Kaminas)
+    skaiciuoti_greitis1(Kaminas)
     spalvinti_greitis(Kaminas)
     spalvinti_H2O()
     spalvinti_paemimas1(Kaminas)

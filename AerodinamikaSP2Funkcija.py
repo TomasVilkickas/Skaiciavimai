@@ -40,8 +40,7 @@ def spalvinti_aerodinamika2(ws, kaminas_obj, pradzios_eilute):
         res_cell.font = Font(bold=True)
         # Jei meta klaidą dėl center_alignment, naudojame tiesioginį aprašymą:
         res_cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
-        res_cell.number_format = '0.00'
-        
+                
         # 2. Langelis tekstui (end_row + 2)
         txt_cell = ws.cell(row=end_row + 2, column=col_idx)
         txt_cell.value = tekstas

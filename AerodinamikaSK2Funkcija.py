@@ -24,6 +24,7 @@ def skaiciuoti_aerodinamika2(kaminas_obj: Kaminas):
     
     tikslo_eilute = 6
     saltinio_eilute = 6 
+    visos_sumos_adresai = []
 
     for lenteles_idx in range(viso_lenteliu):
         # Išsisaugome pradžios eilutę sumos diapazonui
@@ -49,7 +50,7 @@ def skaiciuoti_aerodinamika2(kaminas_obj: Kaminas):
             cell_j = ws_tikslas.cell(row=tikslo_eilute, column=10)
             cell_j.value = formule_j
             cell_j.alignment = Alignment(horizontal='center', vertical='center')
-            cell_j.number_format = '0.00'
+            cell_j.number_format = '0.000'
             
             tikslo_eilute += 1
             saltinio_eilute += 1
@@ -60,6 +61,8 @@ def skaiciuoti_aerodinamika2(kaminas_obj: Kaminas):
         
         # Sukuriame Excel SUM formulę: =SUM(I{nuo}:I{iki})
         sumos_cell.value = f"=SUM(I{pradzios_eilute}:I{pabaigos_eilute})"
+
+        visos_sumos_adresai.append(sumos_cell.coordinate)
         
         # Formatavimas: Centruota, 3 ženklai po kablelio, paryškinta
         sumos_cell.alignment = Alignment(horizontal='center', vertical='center')
@@ -69,5 +72,19 @@ def skaiciuoti_aerodinamika2(kaminas_obj: Kaminas):
         # Po lentelės ir sumos eilutės darome likusį tarpą (4 - 1 sumos eilutė = 3 eilutės)
         tikslo_eilute += 4
         saltinio_eilute += 4
+
+    # Sumų sumos skaičiavimai
+    # Praleidžiame 3 eilutes po paskutinės lentelės sumos
+    # (Kadangi po ciklo tikslo_eilute jau yra paslinkta +4, atimame 1, kad gautume tiksliai 3 tarpus)
+    galutine_eilute = tikslo_eilute - 1
+    galutine_suma_cell = ws_tikslas.cell(row=galutine_eilute, column=9)
+    
+    # Sujungiame visų sumų adresus į vieną formulę: =I12+I25+I38...
+    galutine_suma_cell.value = f"={'+'.join(visos_sumos_adresai)}"
+    
+    # Formatavimas galutiniam rezultatui
+    galutine_suma_cell.alignment = Alignment(horizontal='center', vertical='center')
+    galutine_suma_cell.number_format = '0.000'
+    galutine_suma_cell.font = Font(bold=True, color="FF0000") # Raudona spalva akcentui
 
     wb.save(failo_pavadinimas)
