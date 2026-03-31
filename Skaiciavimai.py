@@ -16,6 +16,8 @@ from H2OSK2Funkcija import skaiciuoti_H2O2
 from H2OSK3Funkcija import skaiciuoti_H2O3
 from AerodinamikaSK2Funkcija import skaiciuoti_aerodinamika2
 from GreitisSK1Funkcija import skaiciuoti_greitis1
+from PaemimasSK2Funkcija import skaiciuoti_paemimas2
+from AerodinamikaSK3Funkcija import skaiciuoti_aerodinamika3
 from GreitisSPFunkcija import spalvinti_greitis
 from H2OSPFunkcija import spalvinti_H2O
 from PaemimasSP1Funkcija import spalvinti_paemimas1
@@ -95,6 +97,8 @@ def pagrindine_programa():
     skaiciuoti_H2O3(Kaminas)
     skaiciuoti_aerodinamika2(Kaminas)
     skaiciuoti_greitis1(Kaminas)
+    skaiciuoti_paemimas2(Kaminas)
+    skaiciuoti_aerodinamika3(Kaminas)
     spalvinti_greitis(Kaminas)
     spalvinti_H2O()
     spalvinti_paemimas1(Kaminas)
